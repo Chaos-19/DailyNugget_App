@@ -1,6 +1,7 @@
 package chaosdev.devbuddy.data.repository
 
 import android.util.Log
+import com.chaosdev.devbuddy.R
 import com.chaosdev.devbuddy.data.repository.AuthRepository
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.SignInClient
@@ -55,7 +56,7 @@ class AuthRepositoryImpl @Inject constructor(
                         .setSupported(true)
                         // This is your web client ID from Firebase project settings -> Project settings -> General
                         // It's NOT the Android client ID
-                        .setServerClientId("260909717895-b496i0o3jju5uqn18iortbddgj35899d.apps.googleusercontent.com") // <--- IMPORTANT!
+                        .setServerClientId(R.string.web_client_id.toString()) // <--- IMPORTANT!
                         .setFilterByAuthorizedAccounts(false) // Set to true to show only authorized accounts
                         .build()
                 )

@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DailyNugget">
         <activity
-            android:name="chaosdev.devbuddy.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.DailyNugget">
