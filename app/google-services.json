@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "260909717895",
+    "project_id": "dailynugget-6a4f1",
+    "storage_bucket": "dailynugget-6a4f1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260909717895:android:25f57ae3c422611931db22",
+        "android_client_info": {
+          "package_name": "com.chaosdev.devbuddy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "260909717895-tg8v3kob614041hr919lctqbfsf2k5n0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.chaosdev.devbuddy",
+            "certificate_hash": "473b7143d37f91e7d156999de073800559f957ff"
+          }
+        },
+        {
+          "client_id": "260909717895-b496i0o3jju5uqn18iortbddgj35899d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7bXxBtBP_58Mr1zAE6G9tPlg37uvr7xk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "260909717895-b496i0o3jju5uqn18iortbddgj35899d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
