@@ -17,11 +17,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.chaosdev.devbuddy.ui.navigation.Screen
+import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val oneTapClient: SignInClient,
+    private val onboardingPreferences: OnboardingPreferences
 ) : ViewModel() {
 
     private val _loginState = MutableStateFlow<Resource<FirebaseUser>>(Resource.Idle())
@@ -29,6 +32,13 @@ class LoginViewModel @Inject constructor(
 
     private val _googleSignInFlow = MutableStateFlow<Resource<BeginSignInResult>>(Resource.Idle())
     val googleSignInFlow = _googleSignInFlow.asStateFlow()
+    
+    
+    // New state to indicate where to navigate after successful auth
+    private val _navigateToRoute = MutableStateFlow<String?>(null)
+    val navigateToRoute = _navigateToRoute.asStateFlow()
+
+
 
     fun signInWithEmail(email: String, password: String) {
         _loginState.value = Resource.Loading()
@@ -36,6 +46,7 @@ class LoginViewModel @Inject constructor(
             val result = authRepository.signInWithEmailAndPassword(email, password)
             result.onSuccess { user -> // <--- Use .onSuccess and .onFailure for kotlin.Result
                 _loginState.value = Resource.Success(user)
+                determinePostAuthNavigation()
             }.onFailure { exception ->
                 _loginState.value = Resource.Error(exception.message ?: "Unknown error")
             }
@@ -48,6 +59,7 @@ class LoginViewModel @Inject constructor(
             val result = authRepository.beginGoogleSignIn()
             result.onSuccess { beginSignInResult -> // <--- Use .onSuccess and .onFailure
                 _googleSignInFlow.value = Resource.Success(beginSignInResult)
+                determinePostAuthNavigation()
             }.onFailure { exception ->
                 _googleSignInFlow.value = Resource.Error(exception.message ?: "Unknown Google Sign-In error")
             }
@@ -60,8 +72,20 @@ class LoginViewModel @Inject constructor(
             val result = authRepository.signInWithGoogle(credential)
             result.onSuccess { user -> // <--- Use .onSuccess and .onFailure
                 _loginState.value = Resource.Success(user)
+                determinePostAuthNavigation()
             }.onFailure { exception ->
                 _loginState.value = Resource.Error(exception.message ?: "Google credential sign-in failed")
+            }
+        }
+    }
+    
+    private fun determinePostAuthNavigation() {
+        viewModelScope.launch {
+            val hasSeenOnboarding = onboardingPreferences.hasSeenOnboarding()
+            if (!hasSeenOnboarding) {
+                _navigateToRoute.value = Screen.Onboarding.route
+            } else {
+                _navigateToRoute.value = Screen.Home.route
             }
         }
     }
@@ -72,6 +96,10 @@ class LoginViewModel @Inject constructor(
 
     fun resetGoogleSignInFlow() {
         _googleSignInFlow.value = Resource.Idle()
+    }
+    
+    fun resetNavigationRoute() {
+        _navigateToRoute.value = null
     }
 }
 /*package com.chaosdev.devbuddy.ui.auth.login;

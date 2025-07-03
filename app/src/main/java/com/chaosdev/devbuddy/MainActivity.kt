@@ -23,16 +23,15 @@ import com.chaosdev.devbuddy.ui.splash.SplashViewModel
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: SplashViewModel by viewModels()
+    private val splashViewModel: SplashViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
     
         val splashscreen = installSplashScreen()
-        var keepSplashScreen = true
 
     
         super.onCreate(savedInstanceState)
-        splashscreen.setKeepOnScreenCondition { viewModel.isLoading.value } 
+        splashscreen.setKeepOnScreenCondition { splashViewModel.isLoading.value } 
         
         //enableEdgeToEdge() 
         setContent {
@@ -41,7 +40,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    NavGraph()
+                    //NavGraph()
+                    NavGraph(splashViewModel = splashViewModel)
                 }
             }
         }

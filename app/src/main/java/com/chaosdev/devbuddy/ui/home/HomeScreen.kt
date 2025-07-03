@@ -23,7 +23,7 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val logoutState by viewModel.logoutState.collectAsState()
-    val currentUser = viewModel.currentUser
+    val currentUser by viewModel.currentUser.collectAsState()
 
     LaunchedEffect(logoutState) {
         when (logoutState) {

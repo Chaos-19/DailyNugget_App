@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.distinctUntilChanged // Ensure this is imported
+import kotlinx.coroutines.flow.map // Ensure this is imported
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -19,8 +21,15 @@ class HomeViewModel @Inject constructor(
     private val _logoutState = MutableStateFlow<Resource<Unit>>(Resource.Idle())
     val logoutState = _logoutState.asStateFlow()
 
-    val currentUser: FirebaseUser?
-        get() = authRepository.currentUser
+    /*val currentUser: FirebaseUser?
+        get() = authRepository.currentUser*/
+
+    // Correctly observe the authStateChanges Flow from AuthRepository
+    val currentUser: StateFlow<FirebaseUser?> = authRepository.authStateChanges
+        .distinctUntilChanged() // Only emit if the user object actually changes (prevents redundant updates)
+        .asStateFlow() // Convert to StateFlow. Its initial value will be the first emitted by authStateChanges (likely null, then the user).
+
+
 
     fun signOut() {
         _logoutState.value = Resource.Loading()
