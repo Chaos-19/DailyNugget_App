@@ -1,4 +1,4 @@
-package com.chaosdev.devbuddy.ui.onboarding;
+package com.chaosdev.devbuddy.ui.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,7 +14,7 @@ class OnboardingViewModel @Inject constructor(
 
     fun completeOnboarding() {
         viewModelScope.launch {
-            onboardingPreferences.setOnboardingCompleted()
+            onboardingPreferences.setHasSeenOnboarding(true)
         }
     }
 }

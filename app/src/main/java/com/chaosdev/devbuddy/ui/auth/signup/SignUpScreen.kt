@@ -1,4 +1,4 @@
-package com.chaosdev.devbuddy.ui.auth.signup;
+package com.chaosdev.devbuddy.ui.auth.signup
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -30,13 +30,26 @@ fun SignUpScreen(
     val context = LocalContext.current
 
     val signUpState by viewModel.signUpState.collectAsState()
+    val navigationState by viewModel.navigationState.collectAsState()
+
+    LaunchedEffect(navigationState) {
+        when (navigationState) {
+            is SignUpViewModel.NavigationState.Onboarding -> {
+                navController.navigate(Screen.Onboarding.route) {
+                    popUpTo(Screen.SignUp.route) { inclusive = true }
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+                viewModel.resetSignUpState()
+            }
+            null -> Unit
+        }
+    }
 
     LaunchedEffect(signUpState) {
         when (signUpState) {
             is Resource.Success -> {
-                Toast.makeText(context, "Account created! Please login.", Toast.LENGTH_SHORT).show()
-                navController.popBackStack() // Go back to login screen
-                viewModel.resetSignUpState()
+                Toast.makeText(context, "Account created!", Toast.LENGTH_SHORT).show()
             }
             is Resource.Error -> {
                 Toast.makeText(context, signUpState.message, Toast.LENGTH_LONG).show()

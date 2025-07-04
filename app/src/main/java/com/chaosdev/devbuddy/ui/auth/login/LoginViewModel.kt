@@ -1,198 +1,111 @@
-package com.chaosdev.devbuddy.ui.auth.login
+package com.chaosdev.devbuddy.ui.login
 
-import android.app.Activity
-import android.content.Context
-import android.content.IntentSender
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.auth.api.identity.BeginSignInResult
-import com.google.android.gms.auth.api.identity.SignInClient
-import com.google.android.gms.auth.api.identity.SignInCredential
-import com.google.firebase.auth.FirebaseUser
+import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
 import com.chaosdev.devbuddy.data.repository.AuthRepository
-import com.chaosdev.devbuddy.ui.common.Resource // <--- Ensure this import is present and correct
+import com.chaosdev.devbuddy.ui.common.Resource
+import com.google.android.gms.auth.api.identity.BeginSignInResult
+import com.google.android.gms.auth.api.identity.SignInCredential
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.chaosdev.devbuddy.ui.navigation.Screen
-import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val oneTapClient: SignInClient,
     private val onboardingPreferences: OnboardingPreferences
 ) : ViewModel() {
 
-    private val _loginState = MutableStateFlow<Resource<FirebaseUser>>(Resource.Idle())
-    val loginState = _loginState.asStateFlow()
+    sealed class UiState {
+        object Idle : UiState()
+        object Loading : UiState()
+        data class Error(val message: String) : UiState()
+    }
+
+    sealed class NavigationState {
+        object Onboarding : NavigationState()
+        object Home : NavigationState()
+        data class GoogleSignIn(val beginSignInResult: BeginSignInResult) : NavigationState()
+    }
+
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState = _uiState.asStateFlow()
 
     private val _googleSignInFlow = MutableStateFlow<Resource<BeginSignInResult>>(Resource.Idle())
     val googleSignInFlow = _googleSignInFlow.asStateFlow()
-    
-    
-    // New state to indicate where to navigate after successful auth
-    private val _navigateToRoute = MutableStateFlow<String?>(null)
-    val navigateToRoute = _navigateToRoute.asStateFlow()
 
+    private val _navigationState = MutableStateFlow<NavigationState?>(null)
+    val navigationState = _navigationState.asStateFlow()
 
-
-    fun signInWithEmail(email: String, password: String) {
-        _loginState.value = Resource.Loading()
+    fun loginWithEmail(email: String, password: String) {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             val result = authRepository.signInWithEmailAndPassword(email, password)
-            result.onSuccess { user -> // <--- Use .onSuccess and .onFailure for kotlin.Result
-                _loginState.value = Resource.Success(user)
-                determinePostAuthNavigation()
-            }.onFailure { exception ->
-                _loginState.value = Resource.Error(exception.message ?: "Unknown error")
-            }
-        }
-    }
-
-    fun beginGoogleSignIn() {
-        _googleSignInFlow.value = Resource.Loading()
-        viewModelScope.launch {
-            val result = authRepository.beginGoogleSignIn()
-            result.onSuccess { beginSignInResult -> // <--- Use .onSuccess and .onFailure
-                _googleSignInFlow.value = Resource.Success(beginSignInResult)
-                determinePostAuthNavigation()
-            }.onFailure { exception ->
-                _googleSignInFlow.value = Resource.Error(exception.message ?: "Unknown Google Sign-In error")
-            }
-        }
-    }
-
-    fun signInWithGoogleCredential(credential: SignInCredential) {
-        _loginState.value = Resource.Loading()
-        viewModelScope.launch {
-            val result = authRepository.signInWithGoogle(credential)
-            result.onSuccess { user -> // <--- Use .onSuccess and .onFailure
-                _loginState.value = Resource.Success(user)
-                determinePostAuthNavigation()
-            }.onFailure { exception ->
-                _loginState.value = Resource.Error(exception.message ?: "Google credential sign-in failed")
-            }
-        }
-    }
-    
-    private fun determinePostAuthNavigation() {
-        viewModelScope.launch {
-            val hasSeenOnboarding = onboardingPreferences.hasSeenOnboarding()
-            if (!hasSeenOnboarding) {
-                _navigateToRoute.value = Screen.Onboarding.route
+            if (result.isSuccess) {
+                checkOnboardingStatus()
             } else {
-                _navigateToRoute.value = Screen.Home.route
+                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Login failed")
             }
         }
     }
 
-    fun resetLoginState() {
-        _loginState.value = Resource.Idle()
-    }
-
-    fun resetGoogleSignInFlow() {
-        _googleSignInFlow.value = Resource.Idle()
-    }
-    
-    fun resetNavigationRoute() {
-        _navigateToRoute.value = null
-    }
-}
-/*package com.chaosdev.devbuddy.ui.auth.login;
-
-
-import android.app.Activity
-import android.content.Context
-import android.content.IntentSender
-import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.android.gms.auth.api.identity.BeginSignInResult
-import com.google.android.gms.auth.api.identity.SignInClient
-import com.google.android.gms.auth.api.identity.SignInCredential
-import com.google.firebase.auth.FirebaseUser
-import com.chaosdev.devbuddy.data.repository.AuthRepository
-//import com.chaosdev.devbuddy.domain.usecase.LoginUseCase // If you use use cases
-import com.chaosdev.devbuddy.ui.common.Resource
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val oneTapClient: SignInClient, // Injected for Google One Tap
-    // private val loginUseCase: LoginUseCase // If using use cases
-) : ViewModel() {
-
-    private val _loginState = MutableStateFlow<Resource<FirebaseUser>>(Resource.Idle())
-    val loginState = _loginState.asStateFlow()
-
-    private val _googleSignInFlow = MutableStateFlow<Resource<BeginSignInResult>>(Resource.Idle())
-    val googleSignInFlow = _googleSignInFlow.asStateFlow()
-
-    fun signInWithEmail(email: String, password: String) {
-        _loginState.value = Resource.Loading()
+    fun signUpWithEmail(email: String, password: String) {
         viewModelScope.launch {
-            // Using repository directly:
-            when (val result = authRepository.signInWithEmailAndPassword(email, password)) {
-            // Using use case:
-            // when (val result = loginUseCase(email, password)) {
-                is Result.Success -> {
-                    _loginState.value = Resource.Success(result.getOrNull()!!)
-                }
-                is Result.Error -> {
-                    _loginState.value = Resource.Error(result.exceptionOrNull()?.message ?: "Unknown error")
-                }
-                else -> {
-                    // Handle other states if necessary
-                }
+            _uiState.value = UiState.Loading
+            val result = authRepository.createUserWithEmailAndPassword(email, password)
+            if (result.isSuccess) {
+                _navigationState.value = NavigationState.Onboarding
+            } else {
+                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Signup failed")
             }
         }
     }
 
     fun beginGoogleSignIn() {
-        _googleSignInFlow.value = Resource.Loading()
         viewModelScope.launch {
-            when (val result = authRepository.beginGoogleSignIn()) {
-                is Result.Success -> {
-                    _googleSignInFlow.value = Resource.Success(result.getOrNull()!!)
-                }
-                is Result.Error -> {
-                    _googleSignInFlow.value = Resource.Error(result.exceptionOrNull()?.message ?: "Unknown Google Sign-In error")
-                }
-                else -> { /* Handle other cases */ }
+            _uiState.value = UiState.Loading
+            _googleSignInFlow.value = Resource.Loading()
+            val result = authRepository.beginGoogleSignIn()
+            if (result.isSuccess) {
+                _googleSignInFlow.value = Resource.Success(result.getOrNull()!!)
+                _navigationState.value = NavigationState.GoogleSignIn(result.getOrNull()!!)
+            } else {
+                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
+                _googleSignInFlow.value = Resource.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
             }
         }
     }
 
-    fun signInWithGoogleCredential(credential: SignInCredential) {
-        _loginState.value = Resource.Loading()
+    fun completeGoogleSignIn(credential: SignInCredential) {
         viewModelScope.launch {
-            when (val result = authRepository.signInWithGoogle(credential)) {
-                is Result.Success -> {
-                    _loginState.value = Resource.Success(result.getOrNull()!!)
-                }
-                is Result.Error -> {
-                    _loginState.value = Resource.Error(result.exceptionOrNull()?.message ?: "Google credential sign-in failed")
-                }
-                else -> { /* Handle other cases */ }
+            _uiState.value = UiState.Loading
+            val result = authRepository.signInWithGoogle(credential)
+            if (result.isSuccess) {
+                checkOnboardingStatus()
+            } else {
+                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
+                _googleSignInFlow.value = Resource.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
             }
         }
     }
 
-    fun resetLoginState() {
-        _loginState.value = Resource.Idle()
+    private suspend fun checkOnboardingStatus() {
+        val hasSeenOnboarding = onboardingPreferences.hasSeenOnboarding()
+        _navigationState.value = if (hasSeenOnboarding) {
+            NavigationState.Home
+        } else {
+            NavigationState.Onboarding
+        }
+    }
+
+    fun resetUiState() {
+        _uiState.value = UiState.Idle
     }
 
     fun resetGoogleSignInFlow() {
         _googleSignInFlow.value = Resource.Idle()
     }
 }
-*/
