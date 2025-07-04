@@ -1,7 +1,22 @@
 {
   "allFiles": [
     {
-      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/build.gradle.kts",
+      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/MainActivity.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/.androidide/editor/openedFiles.json",
       "selection": {
         "end": {
           "column": 0,
@@ -16,5 +31,5 @@
       }
     }
   ],
-  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/build.gradle.kts"
+  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/.androidide/editor/openedFiles.json"
 }

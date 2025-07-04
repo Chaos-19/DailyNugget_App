@@ -5,6 +5,7 @@ package com.chaosdev.devbuddy.ui.navigation
  * Each object corresponds to a unique route string.
  */
 sealed class Screen(val route: String) {
+    object Onboarding : Screen("onboarding_screen") 
     object Login : Screen("login_screen")
     object SignUp : Screen("signup_screen")
     object Home : Screen("home_screen")

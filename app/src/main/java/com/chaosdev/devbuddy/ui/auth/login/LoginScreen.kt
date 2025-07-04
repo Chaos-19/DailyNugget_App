@@ -1,4 +1,4 @@
-package com.chaosdev.devbuddy.ui.auth.login;
+package com.chaosdev.devbuddy.ui.auth.login
 
 import android.app.Activity
 import android.widget.Toast
@@ -19,11 +19,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInCredential
 import com.chaosdev.devbuddy.ui.common.Resource
-import androidx.navigation.NavController
-import com.chaosdev.devbuddy.ui.navigation.Screen // Assuming you have this
+import com.chaosdev.devbuddy.ui.login.LoginViewModel
+import com.chaosdev.devbuddy.ui.navigation.Screen
+import com.google.android.gms.auth.api.identity.BeginSignInResult
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,8 +37,9 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current as Activity
 
-    val loginState by viewModel.loginState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val googleSignInFlow by viewModel.googleSignInFlow.collectAsState()
+    val navigationState by viewModel.navigationState.collectAsState()
 
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
@@ -44,59 +47,56 @@ fun LoginScreen(
         if (result.resultCode == Activity.RESULT_OK) {
             try {
                 val credential = Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
-                viewModel.signInWithGoogleCredential(credential)
+                viewModel.completeGoogleSignIn(credential)
             } catch (e: Exception) {
                 Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
-                viewModel.resetLoginState() // Reset if there's an issue getting credential
+                viewModel.resetGoogleSignInFlow()
             }
         } else {
             Toast.makeText(context, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
-            viewModel.resetLoginState() // Reset if cancelled
+            viewModel.resetGoogleSignInFlow()
         }
     }
 
-    // Observe login state
-    LaunchedEffect(loginState) {
-        when (loginState) {
-            is Resource.Success -> {
-                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Login.route) { inclusive = true } // Clear back stack
+    LaunchedEffect(navigationState) {
+        when (val state = navigationState) {
+            is LoginViewModel.NavigationState.Onboarding -> {
+                navController.navigate(Screen.Onboarding.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    launchSingleTop = true
                 }
-                viewModel.resetLoginState()
             }
-            is Resource.Error -> {
-                Toast.makeText(context, loginState.message, Toast.LENGTH_LONG).show()
-                viewModel.resetLoginState()
+            is LoginViewModel.NavigationState.Home -> {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    launchSingleTop = true
+                }
             }
-            is Resource.Loading -> {
-                // Show loading indicator
-            }
-            is Resource.Idle -> {
-                // Initial state
-            }
-        }
-    }
-
-    // Observe Google Sign-In flow for initiating the UI
-    LaunchedEffect(googleSignInFlow) {
-        when (googleSignInFlow) {
-            is Resource.Success -> {
-                val beginSignInResult = googleSignInFlow.data
-                beginSignInResult?.pendingIntent?.let {
-                    val intentSenderRequest = IntentSenderRequest.Builder(it).build()
+            is LoginViewModel.NavigationState.GoogleSignIn -> {
+                state.beginSignInResult.pendingIntent?.intentSender?.let { intentSender ->
+                    val intentSenderRequest = IntentSenderRequest.Builder(intentSender).build()
                     googleSignInLauncher.launch(intentSenderRequest)
                 }
-                viewModel.resetGoogleSignInFlow() // Reset to avoid re-launching
-            }
-            is Resource.Error -> {
-                Toast.makeText(context, googleSignInFlow.message, Toast.LENGTH_LONG).show()
                 viewModel.resetGoogleSignInFlow()
             }
-            is Resource.Loading -> {
-                // Show loading indicator for Google
+            null -> Unit
+        }
+    }
+
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is LoginViewModel.UiState.Error -> {
+                val currentUiState = uiState
+                if (currentUiState is LoginViewModel.UiState.Error) {
+                    Toast.makeText(context, currentUiState.message, Toast.LENGTH_LONG).show()
+                    viewModel.resetUiState()
+                }
+                viewModel.resetUiState()
             }
-            is Resource.Idle -> {
+            is LoginViewModel.UiState.Loading -> {
+                // Show loading indicator
+            }
+            is LoginViewModel.UiState.Idle -> {
                 // Initial state
             }
         }
@@ -134,11 +134,11 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { viewModel.signInWithEmail(email, password) },
-            enabled = loginState !is Resource.Loading && googleSignInFlow !is Resource.Loading,
+            onClick = { viewModel.loginWithEmail(email, password) },
+            enabled = uiState !is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (loginState is Resource.Loading && !(googleSignInFlow is Resource.Loading)) {
+            if (uiState is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
             } else {
                 Text("Login with Email")
@@ -162,11 +162,11 @@ fun LoginScreen(
 
         Button(
             onClick = { viewModel.beginGoogleSignIn() },
-            enabled = loginState !is Resource.Loading && googleSignInFlow !is Resource.Loading,
+            enabled = uiState !is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
-            if (googleSignInFlow is Resource.Loading) {
+            if (googleSignInFlow is Resource.Loading<BeginSignInResult>) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.onSecondary)
             } else {
                 Text("Sign in with Google")
