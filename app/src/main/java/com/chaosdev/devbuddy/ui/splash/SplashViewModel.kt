@@ -5,9 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.chaosdev.devbuddy.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
@@ -20,22 +27,27 @@ class SplashViewModel @Inject constructor(
     }
 
     private val _navigationState = MutableStateFlow<NavigationState?>(null)
-    val navigationState = _navigationState.asStateFlow()
+    val navigationState: StateFlow<NavigationState?> = _navigationState.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
-    val isLoading = _isLoading.asStateFlow()
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
         viewModelScope.launch {
-            kotlinx.coroutines.delay(1000)
-            authRepository.authStateChanges.collect { user ->
-                _navigationState.value = if (user != null) {
-                    NavigationState.Home
-                } else {
-                    NavigationState.Login
+            authRepository.authStateChanges
+                .distinctUntilChanged()
+                .map { user ->
+                    if (user != null) NavigationState.Home else NavigationState.Login
                 }
-                _isLoading.value = false
-            }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = null
+                )
+                .collect { state ->
+                    _navigationState.value = state
+                    _isLoading.value = false
+                }
         }
     }
 }

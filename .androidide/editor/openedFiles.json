@@ -1,77 +1,17 @@
 {
   "allFiles": [
     {
-      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/ui/home/HomeScreen.kt",
+      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/merged_output.kt",
       "selection": {
         "end": {
-          "column": 0,
-          "index": 0,
-          "line": 0
+          "column": 47,
+          "index": 45356,
+          "line": 1185
         },
         "start": {
-          "column": 0,
-          "index": 0,
-          "line": 0
-        }
-      }
-    },
-    {
-      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/ui/navigation/NavGraph.kt",
-      "selection": {
-        "end": {
-          "column": 5,
-          "index": 1529,
-          "line": 33
-        },
-        "start": {
-          "column": 5,
-          "index": 1529,
-          "line": 33
-        }
-      }
-    },
-    {
-      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/ui/home/HomeViewModel.kt",
-      "selection": {
-        "end": {
-          "column": 5,
-          "index": 1114,
-          "line": 32
-        },
-        "start": {
-          "column": 5,
-          "index": 1114,
-          "line": 32
-        }
-      }
-    },
-    {
-      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/ui/navigation/Screen.kt",
-      "selection": {
-        "end": {
-          "column": 0,
-          "index": 0,
-          "line": 0
-        },
-        "start": {
-          "column": 0,
-          "index": 0,
-          "line": 0
-        }
-      }
-    },
-    {
-      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/MainActivity.kt",
-      "selection": {
-        "end": {
-          "column": 1,
-          "index": 1582,
-          "line": 43
-        },
-        "start": {
-          "column": 1,
-          "index": 1582,
-          "line": 43
+          "column": 47,
+          "index": 45356,
+          "line": 1185
         }
       }
     },
@@ -79,34 +19,19 @@
       "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/build.gradle.kts",
       "selection": {
         "end": {
-          "column": 0,
-          "index": 0,
-          "line": 0
-        },
-        "start": {
-          "column": 0,
-          "index": 0,
-          "line": 0
-        }
-      }
-    },
-    {
-      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/data/repository/AuthRepository.kt",
-      "selection": {
-        "end": {
-          "column": 46,
-          "index": 432,
-          "line": 11
+          "column": 4,
+          "index": 3395,
+          "line": 104
         },
         "start": {
           "column": 4,
-          "index": 390,
-          "line": 11
+          "index": 3395,
+          "line": 104
         }
       }
     },
     {
-      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/data/repository/AuthRepositoryImpl.kt",
+      "file": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/ui/onboarding/OnboardingViewModel.kt",
       "selection": {
         "end": {
           "column": 0,
@@ -121,5 +46,5 @@
       }
     }
   ],
-  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/ui/home/HomeScreen.kt"
+  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/DailyNugget/app/src/main/java/com/chaosdev/devbuddy/ui/onboarding/OnboardingViewModel.kt"
 }
