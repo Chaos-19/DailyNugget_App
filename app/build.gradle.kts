@@ -102,6 +102,9 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
     
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+    
+    // For Horizontal Pager 
+    implementation("androidx.compose.foundation:foundation:1.5.4")
 }
 
 kapt { correctErrorTypes=true } 

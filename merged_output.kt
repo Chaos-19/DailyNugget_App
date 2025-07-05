@@ -2,23 +2,20 @@ package com.chaosdev.devbuddy
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-//import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.chaosdev.devbuddy.ui.navigation.NavGraph
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.compose.rememberNavController
+import com.chaosdev.devbuddy.ui.navigation.AppNavGraph
+import com.chaosdev.devbuddy.ui.splash.SplashViewModel
 import com.chaosdev.devbuddy.ui.theme.MyComposeApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
-
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.lifecycleScope
-
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch 
-import com.chaosdev.devbuddy.ui.splash.SplashViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -26,72 +23,32 @@ class MainActivity : ComponentActivity() {
     private val splashViewModel: SplashViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-    
         val splashscreen = installSplashScreen()
-
-    
         super.onCreate(savedInstanceState)
-        splashscreen.setKeepOnScreenCondition { splashViewModel.isLoading.value } 
-        
-        //enableEdgeToEdge() 
+
+        splashscreen.setKeepOnScreenCondition { splashViewModel.isLoading.value }
+
         setContent {
             MyComposeApplicationTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    //NavGraph()
-                    NavGraph(splashViewModel = splashViewModel)
+                    val isLoading by splashViewModel.isLoading.collectAsState()
+                    val navState by splashViewModel.navigationState.collectAsState()
+                    
+                    if (!isLoading && navState != null) {
+                        val navController = rememberNavController()
+                        AppNavGraph(
+                            navController = navController,
+                            splashViewModel = splashViewModel
+                        )
+                    }
                 }
             }
         }
     }
-}
-
-/*
-package com.chaosdev.devbuddy
-
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.chaosdev.devbuddy.ui.theme.MyComposeApplicationTheme
-
-class MainActivity : ComponentActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MyComposeApplicationTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background) {
-                    Greeting("Android")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(text = "Hello $name!", modifier = modifier)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MyComposeApplicationTheme {
-        Greeting("Android")
-    }
-}
-*/package com.chaosdev.devbuddy.ui.theme
+}package com.chaosdev.devbuddy.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -200,7 +157,7 @@ import dagger.hilt.android.HiltAndroidApp
 @HiltAndroidApp
 class DailyNuggetApplication : Application() {
     // You can initialize timber or other global setups here if needed
-}package com.chaosdev.devbuddy.ui.auth.login;
+}package com.chaosdev.devbuddy.ui.auth.login
 
 import android.app.Activity
 import android.widget.Toast
@@ -221,206 +178,167 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInCredential
 import com.chaosdev.devbuddy.ui.common.Resource
-import androidx.navigation.NavController
-import com.chaosdev.devbuddy.ui.navigation.Screen // Assuming you have this
+import com.chaosdev.devbuddy.ui.login.LoginViewModel
+import com.chaosdev.devbuddy.ui.navigation.Screen
+import com.google.android.gms.auth.api.identity.BeginSignInResult
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-  navController: NavController,
-  viewModel: LoginViewModel = hiltViewModel()
+    navController: NavController,
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
-  var email by remember {
-    mutableStateOf("")
-  }
-  var password by remember {
-    mutableStateOf("")
-  }
-  val context = LocalContext.current as Activity
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val context = LocalContext.current as Activity
 
-  val loginState by viewModel.loginState.collectAsState()
-  val googleSignInFlow by viewModel.googleSignInFlow.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val googleSignInFlow by viewModel.googleSignInFlow.collectAsState()
+    val navigationState by viewModel.navigationState.collectAsState()
 
-  val navigateToRoute by viewModel.navigateToRoute.collectAsState() // Observe new navigation state
-
-  // Observe navigation route changes
-  LaunchedEffect(navigateToRoute) {
-    navigateToRoute?.let {
-      route -> navController.navigate(route) {
-        // Pop up to login screen and make it inclusive to prevent going back
-        popUpTo(Screen.Login.route) {
-          inclusive = true
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            try {
+                val credential = Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
+                viewModel.completeGoogleSignIn(credential)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
+                viewModel.resetGoogleSignInFlow()
+            }
+        } else {
+            Toast.makeText(context, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
+            viewModel.resetGoogleSignInFlow()
         }
-      }
-      viewModel.resetNavigationRoute()// Consume the navigation event
     }
-  }
 
-  val googleSignInLauncher = rememberLauncherForActivityResult(
-    contract = ActivityResultContracts.StartIntentSenderForResult()
-  ) {
-    result ->
-    if (result.resultCode == Activity.RESULT_OK) {
-      try {
-        val credential = Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
-        viewModel.signInWithGoogleCredential(credential)
-      } catch (e: Exception) {
-        Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
-        viewModel.resetLoginState() // Reset if there's an issue getting credential
-      }
-    } else {
-      Toast.makeText(context, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
-      viewModel.resetLoginState() // Reset if cancelled
-    }
-  }
-
-  // Observe login state
-  LaunchedEffect(loginState) {
-    when (loginState) {
-      is Resource.Success -> {
-        Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-        navController.navigate(Screen.Home.route) {
-          popUpTo(Screen.Login.route) {
-            inclusive = true
-          } // Clear back stack
+    LaunchedEffect(navigationState) {
+        when (val state = navigationState) {
+            is LoginViewModel.NavigationState.Onboarding -> {
+                navController.navigate(Screen.Onboarding.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+            is LoginViewModel.NavigationState.Home -> {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+            is LoginViewModel.NavigationState.GoogleSignIn -> {
+                state.beginSignInResult.pendingIntent?.intentSender?.let { intentSender ->
+                    val intentSenderRequest = IntentSenderRequest.Builder(intentSender).build()
+                    googleSignInLauncher.launch(intentSenderRequest)
+                }
+                viewModel.resetGoogleSignInFlow()
+            }
+            null -> Unit
         }
-        viewModel.resetLoginState()
-      }
-      is Resource.Error -> {
-        Toast.makeText(context, loginState.message, Toast.LENGTH_LONG).show()
-        viewModel.resetLoginState()
-      }
-      is Resource.Loading -> {
-        // Show loading indicator
-      }
-      is Resource.Idle -> {
-        // Initial state
-      }
     }
-  }
 
-  // Observe Google Sign-In flow for initiating the UI
-  LaunchedEffect(googleSignInFlow) {
-    when (googleSignInFlow) {
-      is Resource.Success -> {
-        val beginSignInResult = googleSignInFlow.data
-        beginSignInResult?.pendingIntent?.let {
-          val intentSenderRequest = IntentSenderRequest.Builder(it).build()
-          googleSignInLauncher.launch(intentSenderRequest)
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is LoginViewModel.UiState.Error -> {
+                val currentUiState = uiState
+                if (currentUiState is LoginViewModel.UiState.Error) {
+                    Toast.makeText(context, currentUiState.message, Toast.LENGTH_LONG).show()
+                    viewModel.resetUiState()
+                }
+                viewModel.resetUiState()
+            }
+            is LoginViewModel.UiState.Loading -> {
+                // Show loading indicator
+            }
+            is LoginViewModel.UiState.Idle -> {
+                // Initial state
+            }
         }
-        viewModel.resetGoogleSignInFlow() // Reset to avoid re-launching
-      }
-      is Resource.Error -> {
-        Toast.makeText(context, googleSignInFlow.message, Toast.LENGTH_LONG).show()
-        viewModel.resetGoogleSignInFlow()
-      }
-      is Resource.Loading -> {
-        // Show loading indicator for Google
-      }
-      is Resource.Idle -> {
-        // Initial state
-      }
     }
-  }
 
-  Column(
-    modifier = Modifier
-    .fillMaxSize()
-    .padding(16.dp),
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.Center
-  ) {
-    Text(text = "Login", style = MaterialTheme.typography.headlineLarge)
-    Spacer(modifier = Modifier.height(32.dp))
-
-    OutlinedTextField(
-      value = email,
-      onValueChange = {
-        email = it
-      },
-      label = {
-        Text("Email")
-      },
-      leadingIcon = {
-        Icon(Icons.Default.Email, contentDescription = "Email")
-      },
-      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-      modifier = Modifier.fillMaxWidth()
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-
-    OutlinedTextField(
-      value = password,
-      onValueChange = {
-        password = it
-      },
-      label = {
-        Text("Password")
-      },
-      leadingIcon = {
-        Icon(Icons.Default.Lock, contentDescription = "Password")
-      },
-      visualTransformation = PasswordVisualTransformation(),
-      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-      modifier = Modifier.fillMaxWidth()
-    )
-    Spacer(modifier = Modifier.height(24.dp))
-
-    Button(
-      onClick = {
-        viewModel.signInWithEmail(email, password)
-      },
-      enabled = loginState !is Resource.Loading && googleSignInFlow !is Resource.Loading,
-      modifier = Modifier.fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-      if (loginState is Resource.Loading && !(googleSignInFlow is Resource.Loading)) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
-      } else {
-        Text("Login with Email")
-      }
-    }
-    Spacer(modifier = Modifier.height(16.dp))
+        Text(text = "Login", style = MaterialTheme.typography.headlineLarge)
+        Spacer(modifier = Modifier.height(32.dp))
 
-    Button(
-      onClick = {
-        navController.navigate(Screen.SignUp.route)
-      },
-      modifier = Modifier.fillMaxWidth(),
-      colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-    ) {
-      Text("Don't have an account? Sign Up")
-    }
-    Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
 
-    Divider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
-    Text("OR", modifier = Modifier.padding(vertical = 8.dp))
-    Divider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
-    Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(24.dp))
 
-    Button(
-      onClick = {
-        viewModel.beginGoogleSignIn()
-      },
-      enabled = loginState !is Resource.Loading && googleSignInFlow !is Resource.Loading,
-      modifier = Modifier.fillMaxWidth(),
-      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-    ) {
-      if (googleSignInFlow is Resource.Loading) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.onSecondary)
-      } else {
-        Text("Sign in with Google")
-      }
+        Button(
+            onClick = { viewModel.loginWithEmail(email, password) },
+            enabled = uiState !is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (uiState is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+            } else {
+                Text("Login with Email")
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { navController.navigate(Screen.SignUp.route) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Text("Don't have an account? Sign Up")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Divider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
+        Text("OR", modifier = Modifier.padding(vertical = 8.dp))
+        Divider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { viewModel.beginGoogleSignIn() },
+            enabled = uiState !is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+        ) {
+            if (googleSignInFlow is Resource.Loading<BeginSignInResult>) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onSecondary)
+            } else {
+                Text("Sign in with Google")
+            }
+        }
     }
-  }
 }package com.chaosdev.devbuddy.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
 import com.chaosdev.devbuddy.data.repository.AuthRepository
+import com.chaosdev.devbuddy.ui.common.Resource
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.auth.api.identity.SignInCredential
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -436,19 +354,22 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
 
     sealed class UiState {
-        data object Idle : UiState()
-        data object Loading : UiState()
+        object Idle : UiState()
+        object Loading : UiState()
         data class Error(val message: String) : UiState()
     }
 
     sealed class NavigationState {
-        data object Onboarding : NavigationState()
-        data object Home : NavigationState()
+        object Onboarding : NavigationState()
+        object Home : NavigationState()
         data class GoogleSignIn(val beginSignInResult: BeginSignInResult) : NavigationState()
     }
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState = _uiState.asStateFlow()
+
+    private val _googleSignInFlow = MutableStateFlow<Resource<BeginSignInResult>>(Resource.Idle())
+    val googleSignInFlow = _googleSignInFlow.asStateFlow()
 
     private val _navigationState = MutableStateFlow<NavigationState?>(null)
     val navigationState = _navigationState.asStateFlow()
@@ -456,13 +377,11 @@ class LoginViewModel @Inject constructor(
     fun loginWithEmail(email: String, password: String) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-            when (val result = authRepository.signInWithEmailAndPassword(email, password)) {
-                is Result.Success -> {
-                    checkOnboardingStatus()
-                }
-                is Result.Failure -> {
-                    _uiState.value = UiState.Error(result.exception.message ?: "Login failed")
-                }
+            val result = authRepository.signInWithEmailAndPassword(email, password)
+            if (result.isSuccess) {
+                checkOnboardingStatus()
+            } else {
+                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Login failed")
             }
         }
     }
@@ -470,14 +389,11 @@ class LoginViewModel @Inject constructor(
     fun signUpWithEmail(email: String, password: String) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-            when (val result = authRepository.createUserWithEmailAndPassword(email, password)) {
-                is Result.Success -> {
-                    // New users typically need onboarding
-                    _navigationState.value = NavigationState.Onboarding
-                }
-                is Result.Failure -> {
-                    _uiState.value = UiState.Error(result.exception.message ?: "Signup failed")
-                }
+            val result = authRepository.createUserWithEmailAndPassword(email, password)
+            if (result.isSuccess) {
+                _navigationState.value = NavigationState.Onboarding
+            } else {
+                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Signup failed")
             }
         }
     }
@@ -485,13 +401,14 @@ class LoginViewModel @Inject constructor(
     fun beginGoogleSignIn() {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-            when (val result = authRepository.beginGoogleSignIn()) {
-                is Result.Success -> {
-                    _navigationState.value = NavigationState.GoogleSignIn(result.data)
-                }
-                is Result.Failure -> {
-                    _uiState.value = UiState.Error(result.exception.message ?: "Google Sign-In failed")
-                }
+            _googleSignInFlow.value = Resource.Loading()
+            val result = authRepository.beginGoogleSignIn()
+            if (result.isSuccess) {
+                _googleSignInFlow.value = Resource.Success(result.getOrNull()!!)
+                _navigationState.value = NavigationState.GoogleSignIn(result.getOrNull()!!)
+            } else {
+                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
+                _googleSignInFlow.value = Resource.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
             }
         }
     }
@@ -499,13 +416,12 @@ class LoginViewModel @Inject constructor(
     fun completeGoogleSignIn(credential: SignInCredential) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-            when (val result = authRepository.signInWithGoogle(credential)) {
-                is Result.Success -> {
-                    checkOnboardingStatus()
-                }
-                is Result.Failure -> {
-                    _uiState.value = UiState.Error(result.exception.message ?: "Google Sign-In failed")
-                }
+            val result = authRepository.signInWithGoogle(credential)
+            if (result.isSuccess) {
+                checkOnboardingStatus()
+            } else {
+                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
+                _googleSignInFlow.value = Resource.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
             }
         }
     }
@@ -518,7 +434,15 @@ class LoginViewModel @Inject constructor(
             NavigationState.Onboarding
         }
     }
-}package com.chaosdev.devbuddy.ui.auth.signup;
+
+    fun resetUiState() {
+        _uiState.value = UiState.Idle
+    }
+
+    fun resetGoogleSignInFlow() {
+        _googleSignInFlow.value = Resource.Idle()
+    }
+}package com.chaosdev.devbuddy.ui.auth.signup
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -550,13 +474,26 @@ fun SignUpScreen(
     val context = LocalContext.current
 
     val signUpState by viewModel.signUpState.collectAsState()
+    val navigationState by viewModel.navigationState.collectAsState()
+
+    LaunchedEffect(navigationState) {
+        when (navigationState) {
+            is SignUpViewModel.NavigationState.Onboarding -> {
+                navController.navigate(Screen.Onboarding.route) {
+                    popUpTo(Screen.SignUp.route) { inclusive = true }
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+                viewModel.resetSignUpState()
+            }
+            null -> Unit
+        }
+    }
 
     LaunchedEffect(signUpState) {
         when (signUpState) {
             is Resource.Success -> {
-                Toast.makeText(context, "Account created! Please login.", Toast.LENGTH_SHORT).show()
-                navController.popBackStack() // Go back to login screen
-                viewModel.resetSignUpState()
+                Toast.makeText(context, "Account created!", Toast.LENGTH_SHORT).show()
             }
             is Resource.Error -> {
                 Toast.makeText(context, signUpState.message, Toast.LENGTH_LONG).show()
@@ -622,44 +559,50 @@ fun SignUpScreen(
             Text("Already have an account? Login")
         }
     }
-}package com.chaosdev.devbuddy.ui.auth.signup;
-
+}package com.chaosdev.devbuddy.ui.auth.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import com.chaosdev.devbuddy.data.repository.AuthRepository
-//import com.chaosdev.devbuddy.ui.common.Resource
+import com.chaosdev.devbuddy.ui.common.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-import com.chaosdev.devbuddy.ui.common.Resource // Ensure this is imported
-
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
+    sealed class NavigationState {
+        object Onboarding : NavigationState()
+    }
+
     private val _signUpState = MutableStateFlow<Resource<FirebaseUser>>(Resource.Idle())
     val signUpState = _signUpState.asStateFlow()
+
+    private val _navigationState = MutableStateFlow<NavigationState?>(null)
+    val navigationState = _navigationState.asStateFlow()
 
     fun signUpWithEmail(email: String, password: String) {
         _signUpState.value = Resource.Loading()
         viewModelScope.launch {
             val result = authRepository.createUserWithEmailAndPassword(email, password)
-            if (result.isSuccess) { // <--- Change
+            if (result.isSuccess) {
                 _signUpState.value = Resource.Success(result.getOrNull()!!)
-            } else { // <--- Change
-                _signUpState.value = Resource.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+                _navigationState.value = NavigationState.Onboarding
+            } else {
+                _signUpState.value = Resource.Error(result.exceptionOrNull()?.message ?: "Signup failed")
             }
         }
     }
 
     fun resetSignUpState() {
         _signUpState.value = Resource.Idle()
+        _navigationState.value = null
     }
 }package com.chaosdev.devbuddy.ui.common;
 
@@ -668,7 +611,7 @@ sealed class Resource<T>(val data: T? = null, val message: String? = null) {
     class Error<T>(message: String, data: T? = null) : Resource<T>(data, message)
     class Loading<T>(data: T? = null) : Resource<T>(data)
     class Idle<T> : Resource<T>() // Initial state
-}package com.chaosdev.devbuddy.ui.home;
+}package com.chaosdev.devbuddy.ui.home
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -676,7 +619,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -685,6 +629,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.chaosdev.devbuddy.ui.common.Resource
 import com.chaosdev.devbuddy.ui.navigation.Screen
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun HomeScreen(
@@ -692,26 +637,30 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val logoutState by viewModel.logoutState.collectAsState()
-    val currentUser by viewModel.currentUser.collectAsState()
+    val logoutState = viewModel.logoutState.collectAsState().value
+    val currentUser = viewModel.currentUser.collectAsState().value
 
     LaunchedEffect(logoutState) {
         when (logoutState) {
             is Resource.Success -> {
                 Toast.makeText(context, "Logged out successfully!", Toast.LENGTH_SHORT).show()
                 navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Home.route) { inclusive = true } // Clear back stack
+                    popUpTo(Screen.Home.route) { inclusive = true }
                 }
                 viewModel.resetLogoutState()
             }
-            is Resource.Error -> {
+            is Resource.Success<Unit>  -> {
                 Toast.makeText(context, logoutState.message, Toast.LENGTH_LONG).show()
                 viewModel.resetLogoutState()
             }
-            is Resource.Loading -> {
+            is Resource.Error<Unit> -> {
+                Toast.makeText(context, logoutState.message, Toast.LENGTH_LONG).show()
+                viewModel.resetLogoutState()
+            }
+            is Resource.Loading<Unit> -> {
                 // Show loading indicator
             }
-            is Resource.Idle -> {
+            is Resource.Idle<Unit> -> {
                 // Initial state
             }
         }
@@ -727,18 +676,17 @@ fun HomeScreen(
         Text(text = "Welcome to DevBuddy!", style = MaterialTheme.typography.headlineLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
-        currentUser?.let { user ->
+        if (currentUser != null) {
             Text(text = "You are logged in as:", style = MaterialTheme.typography.bodyLarge)
-            Text(text = "Email: ${user.email ?: "N/A"}", style = MaterialTheme.typography.bodyMedium)
-            user.displayName?.let { name ->
+            Text(text = "Email: ${currentUser?.email ?: "N/A"}", style = MaterialTheme.typography.bodyMedium)
+            currentUser?.displayName?.let { name ->
                 Text(text = "Name: $name", style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(modifier = Modifier.height(24.dp))
-        } ?: run {
+        } else {
             Text(text = "Not logged in.", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(24.dp))
         }
-
 
         Button(
             onClick = { viewModel.signOut() },
@@ -758,14 +706,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import com.chaosdev.devbuddy.data.repository.AuthRepository
-import com.chaosdev.devbuddy.ui.common.Resource // <--- Ensure this import is present
+import com.chaosdev.devbuddy.ui.common.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlinx.coroutines.flow.distinctUntilChanged // Ensure this is imported
-import kotlinx.coroutines.flow.map // Ensure this is imported
+
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -775,24 +726,22 @@ class HomeViewModel @Inject constructor(
     private val _logoutState = MutableStateFlow<Resource<Unit>>(Resource.Idle())
     val logoutState = _logoutState.asStateFlow()
 
-    /*val currentUser: FirebaseUser?
-        get() = authRepository.currentUser*/
-
-    // Correctly observe the authStateChanges Flow from AuthRepository
     val currentUser: StateFlow<FirebaseUser?> = authRepository.authStateChanges
-        .distinctUntilChanged() // Only emit if the user object actually changes (prevents redundant updates)
-        .asStateFlow() // Convert to StateFlow. Its initial value will be the first emitted by authStateChanges (likely null, then the user).
-
-
+    .distinctUntilChanged()
+    .stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        null
+    )
 
     fun signOut() {
         _logoutState.value = Resource.Loading()
         viewModelScope.launch {
             val result = authRepository.signOut()
-            result.onSuccess { // <--- Use .onSuccess and .onFailure
+            if (result.isSuccess) {
                 _logoutState.value = Resource.Success(Unit)
-            }.onFailure { exception ->
-                _logoutState.value = Resource.Error(exception.message ?: "Logout failed")
+            } else {
+                _logoutState.value = Resource.Error(result.exceptionOrNull()?.message ?: "Logout failed")
             }
         }
     }
@@ -800,132 +749,96 @@ class HomeViewModel @Inject constructor(
     fun resetLogoutState() {
         _logoutState.value = Resource.Idle()
     }
-}
-/*package com.chaosdev.devbuddy.ui.home;
-
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseUser
-import com.chaosdev.devbuddy.data.repository.AuthRepository
-import com.chaosdev.devbuddy.ui.common.Resource
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class HomeViewModel @Inject constructor(
-    private val authRepository: AuthRepository
-) : ViewModel() {
-
-    private val _logoutState = MutableStateFlow<Resource<Unit>>(Resource.Idle())
-    val logoutState = _logoutState.asStateFlow()
-
-    // Expose current user if needed, or handle in repository directly
-    val currentUser: FirebaseUser?
-        get() = authRepository.currentUser
-
-    fun signOut() {
-        _logoutState.value = Resource.Loading()
-        viewModelScope.launch {
-            when (val result = authRepository.signOut()) {
-                is Result.Success -> {
-                    _logoutState.value = Resource.Success(Unit)
-                }
-                is Result.Error -> {
-                    _logoutState.value = Resource.Error(result.exceptionOrNull()?.message ?: "Logout failed")
-                }
-                else -> { /* Handle other states */ }
-            }
-        }
-    }
-
-    fun resetLogoutState() {
-        _logoutState.value = Resource.Idle()
-    }
-}
-*/package com.chaosdev.devbuddy.ui.navigation
+}package com.chaosdev.devbuddy.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.chaosdev.devbuddy.ui.login.LoginScreen
-import com.chaosdev.devbuddy.ui.login.LoginViewModel
-import com.chaosdev.devbuddy.ui.splash.SplashScreen
-import com.chaosdev.devbuddy.ui.splash.SplashViewModel
+import com.chaosdev.devbuddy.ui.auth.login.LoginScreen
+import com.chaosdev.devbuddy.ui.auth.signup.SignUpScreen
+import com.chaosdev.devbuddy.ui.auth.signup.SignUpViewModel
 import com.chaosdev.devbuddy.ui.home.HomeScreen
 import com.chaosdev.devbuddy.ui.onboarding.OnboardingScreen
+//import com.chaosdev.devbuddy.ui.splash.SplashScreen
+import com.chaosdev.devbuddy.ui.splash.SplashViewModel
+import com.chaosdev.devbuddy.ui.login.LoginViewModel
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
-    splashViewModel: SplashViewModel,
-    loginViewModel: LoginViewModel
+    splashViewModel: SplashViewModel
 ) {
     val splashNavigationState = splashViewModel.navigationState.collectAsState().value
+    val loginViewModel: LoginViewModel = hiltViewModel()
+    val signUpViewModel: SignUpViewModel = hiltViewModel()
     val loginNavigationState = loginViewModel.navigationState.collectAsState().value
+    val signUpNavigationState = signUpViewModel.navigationState.collectAsState().value
 
     val startDestination = when (splashNavigationState) {
-        SplashViewModel.NavigationState.Login -> "login"
-        SplashViewModel.NavigationState.Home -> "home"
-        else -> "splash"
+        SplashViewModel.NavigationState.Login -> Screen.Login.route
+        SplashViewModel.NavigationState.Home -> Screen.Home.route
+        else -> Screen.Login.route
     }
 
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        composable("splash") {
+        /*
+        composable(Screen.Splash.route) {
             SplashScreen()
         }
-        composable("login") {
+        */
+        composable(Screen.Login.route) {
             LoginScreen(
-                viewModel = loginViewModel,
-                onGoogleSignInResult = { credential ->
-                    loginViewModel.completeGoogleSignIn(credential)
-                }
+                navController = navController,
+                viewModel = loginViewModel
             )
         }
-        composable("onboarding") {
+        composable(Screen.SignUp.route) {
+            SignUpScreen(
+                navController = navController,
+                viewModel = signUpViewModel
+            )
+        }
+        composable(Screen.Onboarding.route) {
             OnboardingScreen(
-                onComplete = {
-                    loginViewModel.viewModelScope.launch {
-                        onboardingPreferences.setHasSeenOnboarding(true)
-                        navController.navigate("home") {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
-                }
+                navController = navController
             )
         }
-        composable("home") {
-            HomeScreen()
+        composable(Screen.Home.route) {
+            HomeScreen(
+                navController = navController,
+                viewModel = hiltViewModel()
+            )
         }
     }
 
-    LaunchedEffect(loginNavigationState) {
-        when (val state = loginNavigationState) {
-            is LoginViewModel.NavigationState.Onboarding -> {
-                navController.navigate("onboarding") {
-                    popUpTo("login") { inclusive = true }
+    LaunchedEffect(loginNavigationState, signUpNavigationState) {
+        when {
+            loginNavigationState is LoginViewModel.NavigationState.Onboarding ||
+                    signUpNavigationState is SignUpViewModel.NavigationState.Onboarding -> {
+                navController.navigate(Screen.Onboarding.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    popUpTo(Screen.SignUp.route) { inclusive = true }
                     launchSingleTop = true
                 }
             }
-            is LoginViewModel.NavigationState.Home -> {
-                navController.navigate("home") {
-                    popUpTo("login") { inclusive = true }
+            loginNavigationState is LoginViewModel.NavigationState.Home -> {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    popUpTo(Screen.SignUp.route) { inclusive = true }
                     launchSingleTop = true
                 }
             }
-            is LoginViewModel.NavigationState.GoogleSignIn -> {
-                // Handle Google Sign-In result in LoginScreen
+            loginNavigationState is LoginViewModel.NavigationState.GoogleSignIn -> {
+                // Handled in LoginScreen
             }
-            null -> Unit
+            else -> Unit
         }
     }
 }package com.chaosdev.devbuddy.ui.navigation
@@ -956,36 +869,52 @@ import androidx.lifecycle.viewModelScope
 import com.chaosdev.devbuddy.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
+
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-private val authRepository: AuthRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     sealed class NavigationState {
-        data object Login : NavigationState()
-        data object Home : NavigationState()
+        object Login : NavigationState()
+        object Home : NavigationState()
     }
 
     private val _navigationState = MutableStateFlow<NavigationState?>(null)
-    val navigationState = _navigationState.asStateFlow()
+    val navigationState: StateFlow<NavigationState?> = _navigationState.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
         viewModelScope.launch {
-            // Simulate splash screen delay (optional)
-            kotlinx.coroutines.delay(1000)
-            // Check authentication state
-            _navigationState.value = if (authRepository.currentUser != null) {
-                NavigationState.Home
-            } else {
-                NavigationState.Login
-            }
+            authRepository.authStateChanges
+                .distinctUntilChanged()
+                .map { user ->
+                    if (user != null) NavigationState.Home else NavigationState.Login
+                }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = null
+                )
+                .collect { state ->
+                    _navigationState.value = state
+                    _isLoading.value = false
+                }
         }
     }
-}package com.chaosdev.devbuddy.ui.onboarding;
+}package com.chaosdev.devbuddy.ui.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -1001,7 +930,7 @@ class OnboardingViewModel @Inject constructor(
 
     fun completeOnboarding() {
         viewModelScope.launch {
-            onboardingPreferences.setOnboardingCompleted()
+            onboardingPreferences.setHasSeenOnboarding(true)
         }
     }
 }package com.chaosdev.devbuddy.ui.onboarding
@@ -1017,7 +946,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.chaosdev.devbuddy.ui.navigation.Screen // Import Screen
+import com.chaosdev.devbuddy.ui.navigation.Screen
 
 @Composable
 fun OnboardingScreen(
@@ -1046,12 +975,12 @@ fun OnboardingScreen(
 
         Button(
             onClick = {
-                viewModel.completeOnboarding() // Mark as complete
-                // Navigate to Home after onboarding is complete
+                viewModel.completeOnboarding()
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Onboarding.route) { inclusive = true }
-                    // Also pop up to login if it's still on the back stack
                     popUpTo(Screen.Login.route) { inclusive = true }
+                    popUpTo(Screen.SignUp.route) { inclusive = true }
+                    launchSingleTop = true
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -1059,122 +988,29 @@ fun OnboardingScreen(
             Text("Get Started")
         }
     }
-}
-/*
-package com.chaosdev.devbuddy.ui.onboarding;
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-
-@Composable
-fun OnboardingScreen(
-    navController: NavController,
-    viewModel: OnboardingViewModel = hiltViewModel()
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Welcome to DevBuddy!",
-            style = MaterialTheme.typography.headlineLarge,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Discover amazing features and connect with other developers.",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Button(
-            onClick = {
-                viewModel.completeOnboarding() // Mark as complete
-                navController.navigate(com.chaosdev.devbuddy.ui.navigation.Screen.Login.route) {
-                    popUpTo(com.chaosdev.devbuddy.ui.navigation.Screen.Onboarding.route) { inclusive = true }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Get Started")
-        }
-    }
-}
-*/package com.chaosdev.devbuddy.di
+}package com.chaosdev.devbuddy.di
 
 import android.app.Application
-import android.content.Context // <--- Add this import
-import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.chaosdev.devbuddy.data.repository.AuthRepository
-import com.chaosdev.devbuddy.data.repository.AuthRepositoryImpl
-import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences // <--- Add this import
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
-
-@Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
-
-    @Provides
-    @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth = Firebase.auth
-
-    @Provides
-    @Singleton
-    fun provideGoogleSignInClient(app: Application): SignInClient =
-        Identity.getSignInClient(app.applicationContext)
-
-    @Provides
-    @Singleton
-    fun provideAuthRepository(
-        auth: FirebaseAuth,
-        oneTapClient: SignInClient
-    ): AuthRepository = AuthRepositoryImpl(auth, oneTapClient)
-
-    @Provides
-    @Singleton
-    fun provideOnboardingPreferences(@ApplicationContext context: Context): OnboardingPreferences {
-        return OnboardingPreferences(context)
-    }
-}
-/*package com.chaosdev.devbuddy.di;
-
-import android.app.Application
-import android.content.Context 
-import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.auth.api.identity.SignInClient
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-import com.chaosdev.devbuddy.data.repository.AuthRepository
-import com.chaosdev.devbuddy.data.repository.AuthRepositoryImpl
 import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
+import com.chaosdev.devbuddy.data.repository.AuthRepository
+import com.chaosdev.devbuddy.data.repository.AuthRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "onboarding")
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -1196,18 +1032,12 @@ object AppModule {
         oneTapClient: SignInClient
     ): AuthRepository = AuthRepositoryImpl(auth, oneTapClient)
 
-    // If you add Use Cases, you'd provide them here as well
-    // @Provides
-    // @Singleton
-    // fun provideLoginUseCase(repository: AuthRepository): LoginUseCase = LoginUseCase(repository)
-    
     @Provides
     @Singleton
     fun provideOnboardingPreferences(@ApplicationContext context: Context): OnboardingPreferences {
-        return OnboardingPreferences(context)
+        return OnboardingPreferences(context.dataStore)
     }
-}
-*/package com.chaosdev.devbuddy.data.repository;
+}package com.chaosdev.devbuddy.data.repository;
 
 import com.google.firebase.auth.FirebaseUser
 import com.google.android.gms.auth.api.identity.SignInCredential
@@ -1356,6 +1186,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
