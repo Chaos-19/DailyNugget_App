@@ -11,6 +11,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -106,7 +107,7 @@ fun OnboardingScreen(
             repeat(pagerState.pageCount) { index ->
                 Icon(
                     painter = painterResource(
-                        if (pagerState.currentPage == index) R.drawable.ic_dot_selected else R.drawable.ic_dot_unselected
+                        if (pagerState.currentPage == index) R.drawable.ic_google else R.drawable.app_logo
                     ),
                     contentDescription = null,
                     modifier = Modifier
@@ -128,7 +129,7 @@ fun WelcomePage(onNext: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_onboarding_welcome),
+            painter = painterResource(id = R.drawable.ic_launcher_background),
             contentDescription = "Welcome Image",
             modifier = Modifier.size(200.dp)
         )
@@ -154,6 +155,7 @@ fun WelcomePage(onNext: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopicsPage(
     selectedTopics: List<String>,

@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.chaosdev.devbuddy"
-    compileSdk = 36
+    compileSdk = 34
     
     defaultConfig {
         applicationId = "com.chaosdev.devbuddy"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
         
