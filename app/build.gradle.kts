@@ -103,7 +103,7 @@ dependencies {
     
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     
-    // For Horizontal Pager 
+    // Use foundation version compatible with Compose 1.7.*
     implementation("androidx.compose.foundation:foundation:1.5.4")
 }
 
