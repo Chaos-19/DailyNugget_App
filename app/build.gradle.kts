@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.chaosdev.devbuddy"
-    compileSdk = 33
+    compileSdk = 35
     
     defaultConfig {
         applicationId = "com.chaosdev.devbuddy"
-        minSdk = 21
-        targetSdk = 33
+        minSdk = 24
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         
@@ -103,7 +103,7 @@ dependencies {
     
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     
-    // For Horizontal Pager 
+    // Use foundation version compatible with Compose 1.7.*
     implementation("androidx.compose.foundation:foundation:1.5.4")
 }
 
