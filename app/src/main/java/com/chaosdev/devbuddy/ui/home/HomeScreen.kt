@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import com.chaosdev.devbuddy.ui.common.Resource
 import com.chaosdev.devbuddy.ui.navigation.Screen
 import androidx.compose.runtime.LaunchedEffect
+import com.chaosdev.devbuddy.ui.common.CommuteMinuteOrHourPicker
 
 @Composable
 fun HomeScreen(
@@ -74,6 +75,8 @@ fun HomeScreen(
             Text(text = "Not logged in.", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(24.dp))
         }
+
+        CommuteMinuteOrHourPicker(onSetCommuteTime = { commuteTime: String -> {} })
 
         Button(
             onClick = { viewModel.signOut() },
