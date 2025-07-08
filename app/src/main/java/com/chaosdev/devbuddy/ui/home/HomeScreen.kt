@@ -76,8 +76,6 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        CommuteMinuteOrHourPicker(onSetCommuteTime = { commuteTime: String -> {} })
-
         Button(
             onClick = { viewModel.signOut() },
             enabled = logoutState !is Resource.Loading,
@@ -92,7 +90,3 @@ fun HomeScreen(
     }
 }
 
-@Composable
-fun CommuteMinuteOrHourPicker(onSetCommuteTime: (String) -> () -> Unit) {
-    TODO("Not yet implemented")
-}
