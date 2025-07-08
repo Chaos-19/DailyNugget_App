@@ -1,5 +1,7 @@
 package com.chaosdev.devbuddy.ui.onboarding
 
+
+import HourAndMinutePicker
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -27,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.chaosdev.devbuddy.R
-import com.chaosdev.devbuddy.ui.common.CommuteMinuteOrHourPicker
+//import com.chaosdev.devbuddy.ui.common.CommuteMinuteOrHourPicker
 import com.chaosdev.devbuddy.ui.navigation.Screen
 import kotlinx.coroutines.launch
 
@@ -76,8 +78,8 @@ fun OnboardingScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+            .fillMaxSize(),
+            //.padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         HorizontalPager(
@@ -152,9 +154,6 @@ fun WelcomePage(onNext: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-
-        //horizontalAlignment = Alignment.CenterHorizontally,
-        //verticalArrangement = Arrangement.Top
     ) {
          Row {
              Image(
@@ -167,7 +166,8 @@ fun WelcomePage(onNext: () -> Unit) {
         Column (
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 15.dp),
+                .padding(horizontal = 15.dp)
+                .padding(bottom = 25.dp),
 
             horizontalAlignment = Alignment.CenterHorizontally,
             //verticalArrangement = Arrangement.Top
@@ -319,7 +319,7 @@ fun CommitmentPage(
     onTimeSelected: (Int) -> Unit,
     onNext: () -> Unit
 ) {
-    val timeOptions = listOf(5, 10, 15, 20)
+    var selectedTime by remember { mutableStateOf("01:30") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -352,10 +352,14 @@ fun CommitmentPage(
 
             )
 
-            CommuteMinuteOrHourPicker(onSetCommuteTime = { commuteTime: String -> {} })
+            HourAndMinutePicker(
+                onTimeSelected = { hour, minute ->
+                    selectedTime = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+                }
+            )
         }
         Button(
-            onClick = {onNext},
+            onClick = onNext,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
@@ -364,6 +368,7 @@ fun CommitmentPage(
         }
     }
 }
+
 
 @Composable
 fun NotificationPage(
