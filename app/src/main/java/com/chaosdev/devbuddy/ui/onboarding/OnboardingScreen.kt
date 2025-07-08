@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
@@ -151,33 +152,44 @@ fun WelcomePage(onNext: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+
+        //horizontalAlignment = Alignment.CenterHorizontally,
+        //verticalArrangement = Arrangement.Top
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
-            contentDescription = "Welcome Image",
-            modifier = Modifier.size(200.dp)
-        )
+         Row {
+             Image(
+                 painter = painterResource(id = R.drawable.welcome),
+                 contentDescription = "Welcome Image",
+                 modifier = Modifier.fillMaxWidth(fraction = 1f)
+             )
+         }
         Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "Welcome to DailyNugget",
-            style = MaterialTheme.typography.headlineLarge,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Turn your commute into a learning journey",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(
-            onClick = onNext,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Get Started")
+        Column (
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 15.dp),
+
+            horizontalAlignment = Alignment.CenterHorizontally,
+            //verticalArrangement = Arrangement.Top
+        ){
+            Text(
+                text = "Welcome to DailyNugget",
+                style = MaterialTheme.typography.headlineLarge,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Turn your commute into a learning journey",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = onNext,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Get Started")
+            }
         }
     }
 }
@@ -343,7 +355,7 @@ fun CommitmentPage(
             CommuteMinuteOrHourPicker(onSetCommuteTime = { commuteTime: String -> {} })
         }
         Button(
-            onClick = {},
+            onClick = {onNext},
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
@@ -409,14 +421,15 @@ fun NotificationPage(
 }
 
 
-/*
+
 @Preview(showBackground = true)
 @Composable
 fun NotificationPagePreview(
 
 ) {
 
-    */
+    WelcomePage {  }
+
 /*NotificationPage(notificationEnabled = true,
         onNotificationToggled = { },
         onFinish = {
@@ -436,4 +449,5 @@ fun NotificationPagePreview(
 
         }
     )
-}*/
+    */
+}
