@@ -9,11 +9,12 @@ sealed class Screen(val route: String) {
     object Login : Screen("login_screen")
     object SignUp : Screen("signup_screen")
     object Home : Screen("home_screen")
+    object Profile : Screen("profile_screen")
+    object Settings : Screen("settings_screen")
 
     // You can add more screens here as your application grows
     // For example:
-    // object Profile : Screen("profile_screen")
-    // object Settings : Screen("settings_screen")
+
 
     // If you need to pass arguments, you can define them here
     // object Detail : Screen("detail_screen/{id}") {
