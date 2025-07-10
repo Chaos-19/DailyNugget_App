@@ -1,44 +1,31 @@
 package com.chaosdev.devbuddy.ui.onboarding
 
+
+import HourAndMinutePicker
+import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.VerticalAlignmentLine
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import com.chaosdev.devbuddy.R
-import com.chaosdev.devbuddy.ui.common.CommuteMinuteOrHourPicker
-import com.chaosdev.devbuddy.ui.navigation.Screen
-import kotlinx.coroutines.launch
-
-import androidx.compose.foundation.lazy.grid.items
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.CloudQueue
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Palette
@@ -47,12 +34,42 @@ import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Tune // A general icon for algorithms/settings
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import kotlin.collections.mutableListOf
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.chaosdev.devbuddy.R
+import com.chaosdev.devbuddy.ui.navigation.Screen
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingScreen(
     navController: NavController,
@@ -71,80 +88,123 @@ fun OnboardingScreen(
                 pagerState.animateScrollToPage(pagerState.currentPage - 1)
             }
         }
-        // Do nothing on first page (or navigate to Login if needed)
+
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f)
-        ) { page ->
-            when (page) {
-                0 -> WelcomePage(
-                    onNext = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(1)
+
+    val TAGS = listOf("Welcome", "Topics", "Daily commitment", "Notification")
+
+    Scaffold(
+
+        topBar = {
+
+            // We'll conditionally show the back button
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val showBackButton = navBackStackEntry?.destination?.route != Screen.Login.route
+
+            CenterAlignedTopAppBar(
+
+
+                title = {
+                    Text(
+                        TAGS[pagerState.currentPage],
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    if (showBackButton) {
+                        IconButton(onClick = {
+                            // This will pop the current screen off the back stack
+                            navController.popBackStack()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack, // Standard back arrow
+                                contentDescription = "Back"
+                            )
                         }
                     }
-                )
-                1 -> TopicsPage(
-                    selectedTopics = selectedTopics,
-                    onTopicsSelected = { topics -> viewModel.updateSelectedTopics(topics) },
-                    onNext = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(2)
-                        }
-                    }
-                )
-                2 -> CommitmentPage(
-                    selectedTime = selectedTime,
-                    onTimeSelected = { time -> viewModel.updateSelectedTime(time) },
-                    onNext = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(3)
-                        }
-                    }
-                )
-                3 -> NotificationPage(
-                    notificationEnabled = notificationEnabled,
-                    onNotificationToggled = { enabled -> viewModel.toggleNotification(enabled) },
-                    onFinish = {
-                        viewModel.saveOnboardingData()
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Onboarding.route) { inclusive = true }
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                            popUpTo(Screen.SignUp.route) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            }
-        }
-        // Page Indicator
-        Row(
+                }
+            )
+
+        },
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.Center
+                .fillMaxSize()
+                .padding(innerPadding),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            repeat(pagerState.pageCount) { index ->
-                Icon(
-                    painter = painterResource(
-                        if (pagerState.currentPage == index) R.drawable.ic_google else R.drawable.app_logo
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(12.dp)
-                        .padding(2.dp)
-                )
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f)
+            ) { page ->
+                when (page) {
+                    0 -> WelcomePage(
+                        onNext = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(1)
+                            }
+                        }
+                    )
+
+                    1 -> TopicsPage(
+                        selectedTopics = selectedTopics,
+                        onTopicsSelected = { topics -> viewModel.updateSelectedTopics(topics) },
+                        onNext = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(2)
+                            }
+                        }
+                    )
+
+                    2 -> CommitmentPage(
+                        selectedTime = selectedTime,
+                        onTimeSelected = { time -> viewModel.updateSelectedTime(time) },
+                        onNext = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(3)
+                            }
+                        }
+                    )
+
+                    3 -> NotificationPage(
+                        notificationEnabled = notificationEnabled,
+                        onNotificationToggled = { enabled -> viewModel.toggleNotification(enabled) },
+                        onFinish = {
+                            //viewModel.saveOnboardingData()
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Onboarding.route) { inclusive = true }
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                                popUpTo(Screen.SignUp.route) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+            }
+            // Page Indicator
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(pagerState.pageCount) { index ->
+                    Icon(
+                        painter = painterResource(
+                            if (pagerState.currentPage == index) R.drawable.ic_google else R.drawable.app_logo
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(12.dp)
+                            .padding(2.dp)
+                    )
+                }
             }
         }
+
     }
+
 }
 
 @Composable
@@ -152,26 +212,24 @@ fun WelcomePage(onNext: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-
-        //horizontalAlignment = Alignment.CenterHorizontally,
-        //verticalArrangement = Arrangement.Top
     ) {
-         Row {
-             Image(
-                 painter = painterResource(id = R.drawable.welcome),
-                 contentDescription = "Welcome Image",
-                 modifier = Modifier.fillMaxWidth(fraction = 1f)
-             )
-         }
+        Row {
+            Image(
+                painter = painterResource(id = R.drawable.welcome),
+                contentDescription = "Welcome Image",
+                modifier = Modifier.fillMaxWidth(fraction = 1f)
+            )
+        }
         Spacer(modifier = Modifier.height(24.dp))
-        Column (
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 15.dp),
+                .padding(horizontal = 15.dp)
+                .padding(bottom = 25.dp),
 
             horizontalAlignment = Alignment.CenterHorizontally,
             //verticalArrangement = Arrangement.Top
-        ){
+        ) {
             Text(
                 text = "Welcome to DailyNugget",
                 style = MaterialTheme.typography.headlineLarge,
@@ -193,8 +251,6 @@ fun WelcomePage(onNext: () -> Unit) {
         }
     }
 }
-
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -319,7 +375,7 @@ fun CommitmentPage(
     onTimeSelected: (Int) -> Unit,
     onNext: () -> Unit
 ) {
-    val timeOptions = listOf(5, 10, 15, 20)
+    var selectedTime by remember { mutableStateOf("01:30") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -327,15 +383,6 @@ fun CommitmentPage(
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
-            Text(
-                text = "Daily commitment",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .align(alignment = Alignment.CenterHorizontally)
-            )
-
             Text(
                 text = "How much time do you want to learn each day?",
                 style = MaterialTheme.typography.headlineMedium,
@@ -352,10 +399,15 @@ fun CommitmentPage(
 
             )
 
-            CommuteMinuteOrHourPicker(onSetCommuteTime = { commuteTime: String -> {} })
+            HourAndMinutePicker(
+                onTimeSelected = { hour, minute ->
+                    selectedTime =
+                        "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+                }
+            )
         }
         Button(
-            onClick = {onNext},
+            onClick = onNext,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
@@ -364,6 +416,7 @@ fun CommitmentPage(
         }
     }
 }
+
 
 @Composable
 fun NotificationPage(
@@ -376,26 +429,18 @@ fun NotificationPage(
             .fillMaxSize()
             .padding(16.dp),
 
-    ) {
-        Text(
-            text = "Notifications",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .padding(bottom = 13.dp)
-                .align(alignment = Alignment.CenterHorizontally)
-        )
+        ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row (modifier = Modifier.weight(1f)){
+            Row(modifier = Modifier.weight(1f)) {
                 Column {
                     Text(
                         text = "Enable daily reading prompt",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
-                        )
+                    )
                     Text(
                         text = "Get a daily prompt to read an A1-curated article",
                         style = MaterialTheme.typography.bodySmall,
@@ -421,20 +466,19 @@ fun NotificationPage(
 }
 
 
-
 @Preview(showBackground = true)
 @Composable
 fun NotificationPagePreview(
 
 ) {
 
-    WelcomePage {  }
+    //WelcomePage {  }
+    // OnboardingScreen(navController = NavController(LocalContext.current),)
+    /*NotificationPage(notificationEnabled = true,
+            onNotificationToggled = { },
+            onFinish = {
 
-/*NotificationPage(notificationEnabled = true,
-        onNotificationToggled = { },
-        onFinish = {
-
-        })*//*
+            })*//*
 
 
     var currentSelectedTopics by remember { mutableStateOf(emptyList<String>()) }

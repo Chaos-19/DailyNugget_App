@@ -73,8 +73,10 @@ class LoginViewModel @Inject constructor(
                 _googleSignInFlow.value = Resource.Success(result.getOrNull()!!)
                 _navigationState.value = NavigationState.GoogleSignIn(result.getOrNull()!!)
             } else {
-                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
-                _googleSignInFlow.value = Resource.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
+                _uiState.value =
+                    UiState.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
+                _googleSignInFlow.value =
+                    Resource.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
             }
         }
     }
@@ -86,8 +88,10 @@ class LoginViewModel @Inject constructor(
             if (result.isSuccess) {
                 checkOnboardingStatus()
             } else {
-                _uiState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
-                _googleSignInFlow.value = Resource.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
+                _uiState.value =
+                    UiState.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
+                _googleSignInFlow.value =
+                    Resource.Error(result.exceptionOrNull()?.message ?: "Google Sign-In failed")
             }
         }
     }

@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val isLoading by splashViewModel.isLoading.collectAsState()
                     val navState by splashViewModel.navigationState.collectAsState()
-                    
+
                     if (!isLoading && navState != null) {
                         val navController = rememberNavController()
                         AppNavGraph(

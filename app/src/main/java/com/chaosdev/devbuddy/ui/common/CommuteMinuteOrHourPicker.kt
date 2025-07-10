@@ -1,63 +1,105 @@
-package com.chaosdev.devbuddy.ui.common
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.*
-
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.chaosdev.devbuddy.ui.common.WheelPicker
 
-
+/**
+ * A two-wheel picker for selecting hours and minutes.
+ *
+ * @param onTimeSelected A callback that provides the selected hour and minute.
+ * @param initialHour The hour to be selected initially (0-23).
+ * @param initialMinute The minute to be selected initially (0-59).
+ */
 @Composable
-fun CommuteMinuteOrHourPicker(
-  onSetCommuteTime: (String) -> Unit
+fun HourAndMinutePicker(
+    onTimeSelected: (hour: Int, minute: Int) -> Unit,
+    initialHour: Int = 1,
+    initialMinute: Int = 30
 ) {
-    val minuteList = (0..59).map { "$it mins" }
-    val hourList = (1..5).map { "${it} h" }
-    val pickerList = minuteList + hourList
+    val hours = remember { (0..23).map { it.toString().padStart(2, '0') } }
+    val minutes = remember { (0..59).map { it.toString().padStart(2, '0') } }
 
-    val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
+    var selectedHour by remember { mutableStateOf(initialHour) }
+    var selectedMinute by remember { mutableStateOf(initialMinute) }
 
-    val selectedItemIndex by remember {
-        derivedStateOf {
-            val center = listState.firstVisibleItemIndex +
-                    (listState.firstVisibleItemScrollOffset / 50)
-            center.coerceIn(0, pickerList.lastIndex)
-        }
+    // Notify the parent composable when the selection changes.
+    LaunchedEffect(selectedHour, selectedMinute) {
+        onTimeSelected(selectedHour, selectedMinute)
     }
 
-    Box(
-        modifier = Modifier
-            .height(140.dp)
-            .background(color = Color(0xFFF0F2F5), shape = RoundedCornerShape(15.dp))
-            .padding(vertical = 8.dp)
-    ) {
-        LazyColumn(
-            state = listState,
-            contentPadding = PaddingValues(vertical = 40.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            itemsIndexed(pickerList) { index, item ->
-                Text(
-                    text = item,
-                    fontSize = if (index == selectedItemIndex) 20.sp else 16.sp,
-                    fontWeight = if (index == selectedItemIndex) FontWeight.Bold else FontWeight.Normal,
-                    color = if (index == selectedItemIndex) Color.Black else Color.Gray,
+    val itemHeight = 60.dp
 
-                    textAlign = TextAlign.Center,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        // The Box provides the central highlight background for the pickers.
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            // The gray highlight "pill" in the background
+            Box(
+                modifier = Modifier
+                    .height(itemHeight)
+                    .fillMaxWidth(0.7f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF2F3F5))
+            )
+
+            // The row containing the two pickers
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Hour Picker
+                WheelPicker(
+                    items = hours,
+                    onItemSelected = { _, item -> selectedHour = item.toInt() },
+                    initialIndex = hours.indexOf(initialHour.toString().padStart(2, '0')),
+                    itemHeight = itemHeight
+                )
+
+                Text(
+                    ":",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp,
+                    color = Color(0xFF2E3A59),
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
+                        .align(Alignment.CenterVertically)
+                        .padding(bottom = 5.dp)
+                )
+
+                // Minute Picker
+                WheelPicker(
+                    items = minutes,
+                    onItemSelected = { _, item -> selectedMinute = item.toInt() },
+                    initialIndex = minutes.indexOf(initialMinute.toString().padStart(2, '0')),
+                    itemHeight = itemHeight
                 )
             }
         }
@@ -65,10 +107,24 @@ fun CommuteMinuteOrHourPicker(
 }
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 320)
 @Composable
-fun PreviewDurationPicker() {
-    MaterialTheme { // Use your app's theme
-        CommuteMinuteOrHourPicker(onSetCommuteTime = { commuteTime: String -> {} })
+fun HourAndMinutePickerPreview() {
+    var selectedTime by remember { mutableStateOf("01:30") }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HourAndMinutePicker(
+            onTimeSelected = { hour, minute ->
+                selectedTime =
+                    "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+            }
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(text = "Selected Time: $selectedTime")
     }
 }

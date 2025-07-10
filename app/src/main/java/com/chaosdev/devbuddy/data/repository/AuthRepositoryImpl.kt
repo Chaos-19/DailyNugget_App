@@ -1,22 +1,18 @@
-package com.chaosdev.devbuddy.data.repository;
+package com.chaosdev.devbuddy.data.repository
 
 import android.util.Log
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.auth.api.identity.SignInCredential
-import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
-import com.chaosdev.devbuddy.R
-import com.google.android.gms.auth.api.identity.BeginSignInResult
-import kotlinx.coroutines.flow.Flow 
-import kotlinx.coroutines.channels.awaitClose 
 
 class AuthRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
@@ -25,7 +21,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override val currentUser: FirebaseUser?
         get() = auth.currentUser
-        
+
     // NEW: Implement authStateChanges as a Flow
     override val authStateChanges: Flow<FirebaseUser?> = callbackFlow {
         val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
@@ -36,11 +32,14 @@ class AuthRepositoryImpl @Inject constructor(
             auth.removeAuthStateListener(authStateListener) // Clean up listener when flow is cancelled
         }
     }
-        
+
 
     // --- Email/Password Authentication ---
 
-    override suspend fun createUserWithEmailAndPassword(email: String, password: String): Result<FirebaseUser> {
+    override suspend fun createUserWithEmailAndPassword(
+        email: String,
+        password: String
+    ): Result<FirebaseUser> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             result.user?.let { Result.success(it) }
@@ -51,7 +50,10 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signInWithEmailAndPassword(email: String, password: String): Result<FirebaseUser> {
+    override suspend fun signInWithEmailAndPassword(
+        email: String,
+        password: String
+    ): Result<FirebaseUser> {
         return try {
             val result = auth.signInWithEmailAndPassword(email, password).await()
             result.user?.let { Result.success(it) }

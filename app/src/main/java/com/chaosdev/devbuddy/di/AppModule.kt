@@ -5,14 +5,14 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
+import com.chaosdev.devbuddy.data.repository.AuthRepository
+import com.chaosdev.devbuddy.data.repository.AuthRepositoryImpl
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
-import com.chaosdev.devbuddy.data.repository.AuthRepository
-import com.chaosdev.devbuddy.data.repository.AuthRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

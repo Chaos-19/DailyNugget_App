@@ -2,19 +2,18 @@ package com.chaosdev.devbuddy.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseUser
 import com.chaosdev.devbuddy.data.repository.AuthRepository
 import com.chaosdev.devbuddy.ui.common.Resource
+import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -25,12 +24,12 @@ class HomeViewModel @Inject constructor(
     val logoutState = _logoutState.asStateFlow()
 
     val currentUser: StateFlow<FirebaseUser?> = authRepository.authStateChanges
-    .distinctUntilChanged()
-    .stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        null
-    )
+        .distinctUntilChanged()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            null
+        )
 
     fun signOut() {
         _logoutState.value = Resource.Loading()
@@ -39,7 +38,8 @@ class HomeViewModel @Inject constructor(
             if (result.isSuccess) {
                 _logoutState.value = Resource.Success(Unit)
             } else {
-                _logoutState.value = Resource.Error(result.exceptionOrNull()?.message ?: "Logout failed")
+                _logoutState.value =
+                    Resource.Error(result.exceptionOrNull()?.message ?: "Logout failed")
             }
         }
     }
