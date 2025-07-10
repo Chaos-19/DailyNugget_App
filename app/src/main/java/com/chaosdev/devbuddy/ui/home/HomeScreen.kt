@@ -1,11 +1,26 @@
 package com.chaosdev.devbuddy.ui.home
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -17,6 +32,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.chaosdev.devbuddy.ui.common.Resource
+import com.chaosdev.devbuddy.ui.home.challenges.ChallengesScreen
+import com.chaosdev.devbuddy.ui.home.feed.FeedScreen
+import com.chaosdev.devbuddy.ui.home.progress.ProgressScreen
 import com.chaosdev.devbuddy.ui.navigation.BottomNavigationBar
 
 enum class HomeDestination(val route: String, val label: String) {
@@ -48,13 +66,16 @@ fun HomeScreen(
                 }
                 viewModel.resetLogoutState()
             }
+
             is Resource.Error -> {
                 Toast.makeText(context, logoutState.message, Toast.LENGTH_LONG).show()
                 viewModel.resetLogoutState()
             }
+
             is Resource.Loading -> {
                 // Show loading indicator
             }
+
             is Resource.Idle -> {
                 // Initial state
             }
@@ -73,8 +94,7 @@ fun HomeScreen(
                 TabRow(
                     selectedTabIndex = selectedDestination,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp), // Horizontal padding for TabRow
+                        .fillMaxWidth(),
                     containerColor = MaterialTheme.colorScheme.background
                 ) {
                     HomeDestination.values().forEachIndexed { index, destination ->
@@ -136,91 +156,13 @@ fun HomeNavHost(
         modifier = modifier
     ) {
         composable(HomeDestination.FEED.route) {
-            FeedTabContent(currentUser, logoutState, viewModel)
+            FeedScreen(currentUser, logoutState, viewModel)
         }
         composable(HomeDestination.PROGRESS.route) {
-            ProgressTabContent()
+            ProgressScreen()
         }
         composable(HomeDestination.CHALLENGES.route) {
-            ChallengesTabContent()
+            ChallengesScreen()
         }
-    }
-}
-
-@Composable
-fun FeedTabContent(
-    currentUser: com.google.firebase.auth.FirebaseUser?,
-    logoutState: Resource<Unit>,
-    viewModel: HomeViewModel
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = "Welcome to DevBuddy!", style = MaterialTheme.typography.headlineLarge)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (currentUser != null) {
-            Text(text = "You are logged in as:", style = MaterialTheme.typography.bodyLarge)
-            Text(text = "Email: ${currentUser.email ?: "N/A"}", style = MaterialTheme.typography.bodyMedium)
-            currentUser.displayName?.let { name ->
-                Text(text = "Name: $name", style = MaterialTheme.typography.bodyMedium)
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-        } else {
-            Text(text = "Not logged in.", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        Button(
-            onClick = { viewModel.signOut() },
-            enabled = logoutState !is Resource.Loading,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (logoutState is Resource.Loading) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
-            } else {
-                Text("Logout")
-            }
-        }
-    }
-}
-
-@Composable
-fun ProgressTabContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = "Progress", style = MaterialTheme.typography.headlineLarge)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Track your learning progress here.",
-            style = MaterialTheme.typography.bodyLarge
-        )
-    }
-}
-
-@Composable
-fun ChallengesTabContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = "Challenges", style = MaterialTheme.typography.headlineLarge)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Explore coding challenges and tasks.",
-            style = MaterialTheme.typography.bodyLarge
-        )
     }
 }
