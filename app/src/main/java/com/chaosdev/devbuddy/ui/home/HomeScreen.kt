@@ -2,10 +2,8 @@ package com.chaosdev.devbuddy.ui.home
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,7 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -32,15 +29,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.chaosdev.devbuddy.ui.common.Resource
-import com.chaosdev.devbuddy.ui.home.challenges.ChallengesScreen
 import com.chaosdev.devbuddy.ui.home.feed.FeedScreen
-import com.chaosdev.devbuddy.ui.home.progress.ProgressScreen
+import com.chaosdev.devbuddy.ui.home.saved.SavedScreen
+import com.chaosdev.devbuddy.ui.home.trending.TrendingScreen
 import com.chaosdev.devbuddy.ui.navigation.BottomNavigationBar
 
 enum class HomeDestination(val route: String, val label: String) {
-    FEED("feed", "Feed"),
-    PROGRESS("progress", "Progress"),
-    CHALLENGES("challenges", "Challenges")
+    FEED("feed", "For You"),
+    TRENDING("trending", "Trending"),
+    SAVED("saved", "Saved")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -123,7 +120,7 @@ fun HomeScreen(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp)) // Bottom spacing
+
             }
         }
     ) { innerPadding ->
@@ -132,8 +129,7 @@ fun HomeScreen(
             startDestination = HomeDestination.FEED.route,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(top = 8.dp), // Additional top padding to separate from TabRow
+                .padding(innerPadding),
             currentUser = currentUser,
             logoutState = logoutState,
             viewModel = viewModel
@@ -158,11 +154,11 @@ fun HomeNavHost(
         composable(HomeDestination.FEED.route) {
             FeedScreen(currentUser, logoutState, viewModel)
         }
-        composable(HomeDestination.PROGRESS.route) {
-            ProgressScreen()
+        composable(HomeDestination.TRENDING.route) {
+            TrendingScreen()
         }
-        composable(HomeDestination.CHALLENGES.route) {
-            ChallengesScreen()
+        composable(HomeDestination.SAVED.route) {
+            SavedScreen()
         }
     }
 }

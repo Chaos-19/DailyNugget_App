@@ -1,4 +1,4 @@
-package com.chaosdev.devbuddy.ui.home.challenges
+package com.chaosdev.devbuddy.ui.home.trending
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ChallengesScreen() {
+fun TrendingScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -22,10 +22,10 @@ fun ChallengesScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Challenges", style = MaterialTheme.typography.headlineLarge)
+        Text(text = "Trending", style = MaterialTheme.typography.headlineLarge)
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Explore coding challenges and tasks.",
+            text = "Find trending nuggets here.",
             style = MaterialTheme.typography.bodyLarge
         )
     }

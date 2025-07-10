@@ -1,4 +1,4 @@
-package com.chaosdev.devbuddy.ui.home.progress
+package com.chaosdev.devbuddy.ui.home.saved
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ProgressScreen() {
+fun SavedScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -22,10 +22,10 @@ fun ProgressScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Progress", style = MaterialTheme.typography.headlineLarge)
+        Text(text = "Saved", style = MaterialTheme.typography.headlineLarge)
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Track your learning progress here.",
+            text = "Find your saved nuggets here.",
             style = MaterialTheme.typography.bodyLarge
         )
     }
