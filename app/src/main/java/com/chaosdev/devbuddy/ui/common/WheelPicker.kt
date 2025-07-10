@@ -2,12 +2,18 @@ package com.chaosdev.devbuddy.ui.common
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,7 +54,8 @@ fun WheelPicker(
             if (listState.layoutInfo.visibleItemsInfo.isEmpty() || listState.layoutInfo.viewportSize.height == 0) {
                 -1
             } else {
-                val viewportCenter = listState.layoutInfo.viewportStartOffset + listState.layoutInfo.viewportSize.height / 2
+                val viewportCenter =
+                    listState.layoutInfo.viewportStartOffset + listState.layoutInfo.viewportSize.height / 2
                 listState.layoutInfo.visibleItemsInfo
                     .minByOrNull { (it.offset + it.size / 2 - viewportCenter).absoluteValue }
                     ?.index ?: -1

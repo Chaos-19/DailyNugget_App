@@ -5,13 +5,33 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,12 +40,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.auth.api.identity.SignInCredential
 import com.chaosdev.devbuddy.ui.common.Resource
 import com.chaosdev.devbuddy.ui.login.LoginViewModel
 import com.chaosdev.devbuddy.ui.navigation.Screen
 import com.google.android.gms.auth.api.identity.BeginSignInResult
+import com.google.android.gms.auth.api.identity.Identity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,10 +65,12 @@ fun LoginScreen(
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             try {
-                val credential = Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
+                val credential =
+                    Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
                 viewModel.completeGoogleSignIn(credential)
             } catch (e: Exception) {
-                Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
                 viewModel.resetGoogleSignInFlow()
             }
         } else {
@@ -66,19 +87,22 @@ fun LoginScreen(
                     launchSingleTop = true
                 }
             }
+
             is LoginViewModel.NavigationState.Home -> {
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
                     launchSingleTop = true
                 }
             }
+
             is LoginViewModel.NavigationState.GoogleSignIn -> {
-                state.beginSignInResult.pendingIntent?.intentSender?.let { intentSender ->
+                state.beginSignInResult.pendingIntent.intentSender.let { intentSender ->
                     val intentSenderRequest = IntentSenderRequest.Builder(intentSender).build()
                     googleSignInLauncher.launch(intentSenderRequest)
                 }
                 viewModel.resetGoogleSignInFlow()
             }
+
             null -> Unit
         }
     }
@@ -93,9 +117,11 @@ fun LoginScreen(
                 }
                 viewModel.resetUiState()
             }
+
             is LoginViewModel.UiState.Loading -> {
                 // Show loading indicator
             }
+
             is LoginViewModel.UiState.Idle -> {
                 // Initial state
             }
@@ -155,9 +181,17 @@ fun LoginScreen(
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-        Divider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
+        Divider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.outline
+        )
         Text("OR", modifier = Modifier.padding(vertical = 8.dp))
-        Divider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
+        Divider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.outline
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(

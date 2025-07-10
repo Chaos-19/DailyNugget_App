@@ -22,6 +22,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.CloudQueue
 import androidx.compose.material.icons.filled.Code
@@ -66,7 +67,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.chaosdev.devbuddy.R
 import com.chaosdev.devbuddy.ui.navigation.Screen
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.ArrowBack
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -91,7 +92,7 @@ fun OnboardingScreen(
     }
 
 
-val TAGS = listOf("Welcome", "Topics", "Daily commitment", "Notification")
+    val TAGS = listOf("Welcome", "Topics", "Daily commitment", "Notification")
 
     Scaffold(
 
@@ -110,7 +111,7 @@ val TAGS = listOf("Welcome", "Topics", "Daily commitment", "Notification")
                         fontWeight = FontWeight.Bold
                     )
                 },
-                        navigationIcon = {
+                navigationIcon = {
                     if (showBackButton) {
                         IconButton(onClick = {
                             // This will pop the current screen off the back stack
@@ -126,12 +127,11 @@ val TAGS = listOf("Welcome", "Topics", "Daily commitment", "Notification")
             )
 
         },
-    ) {
-            innerPadding->
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-            .padding(innerPadding),
+                .padding(innerPadding),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             HorizontalPager(
@@ -146,6 +146,7 @@ val TAGS = listOf("Welcome", "Topics", "Daily commitment", "Notification")
                             }
                         }
                     )
+
                     1 -> TopicsPage(
                         selectedTopics = selectedTopics,
                         onTopicsSelected = { topics -> viewModel.updateSelectedTopics(topics) },
@@ -155,6 +156,7 @@ val TAGS = listOf("Welcome", "Topics", "Daily commitment", "Notification")
                             }
                         }
                     )
+
                     2 -> CommitmentPage(
                         selectedTime = selectedTime,
                         onTimeSelected = { time -> viewModel.updateSelectedTime(time) },
@@ -164,6 +166,7 @@ val TAGS = listOf("Welcome", "Topics", "Daily commitment", "Notification")
                             }
                         }
                     )
+
                     3 -> NotificationPage(
                         notificationEnabled = notificationEnabled,
                         onNotificationToggled = { enabled -> viewModel.toggleNotification(enabled) },
@@ -210,15 +213,15 @@ fun WelcomePage(onNext: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
     ) {
-         Row {
-             Image(
-                 painter = painterResource(id = R.drawable.welcome),
-                 contentDescription = "Welcome Image",
-                 modifier = Modifier.fillMaxWidth(fraction = 1f)
-             )
-         }
+        Row {
+            Image(
+                painter = painterResource(id = R.drawable.welcome),
+                contentDescription = "Welcome Image",
+                modifier = Modifier.fillMaxWidth(fraction = 1f)
+            )
+        }
         Spacer(modifier = Modifier.height(24.dp))
-        Column (
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 15.dp)
@@ -226,7 +229,7 @@ fun WelcomePage(onNext: () -> Unit) {
 
             horizontalAlignment = Alignment.CenterHorizontally,
             //verticalArrangement = Arrangement.Top
-        ){
+        ) {
             Text(
                 text = "Welcome to DailyNugget",
                 style = MaterialTheme.typography.headlineLarge,
@@ -248,8 +251,6 @@ fun WelcomePage(onNext: () -> Unit) {
         }
     }
 }
-
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -400,7 +401,8 @@ fun CommitmentPage(
 
             HourAndMinutePicker(
                 onTimeSelected = { hour, minute ->
-                    selectedTime = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+                    selectedTime =
+                        "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
                 }
             )
         }
@@ -427,18 +429,18 @@ fun NotificationPage(
             .fillMaxSize()
             .padding(16.dp),
 
-    ) {
+        ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row (modifier = Modifier.weight(1f)){
+            Row(modifier = Modifier.weight(1f)) {
                 Column {
                     Text(
                         text = "Enable daily reading prompt",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
-                        )
+                    )
                     Text(
                         text = "Get a daily prompt to read an A1-curated article",
                         style = MaterialTheme.typography.bodySmall,
@@ -464,7 +466,6 @@ fun NotificationPage(
 }
 
 
-
 @Preview(showBackground = true)
 @Composable
 fun NotificationPagePreview(
@@ -473,11 +474,11 @@ fun NotificationPagePreview(
 
     //WelcomePage {  }
     // OnboardingScreen(navController = NavController(LocalContext.current),)
-/*NotificationPage(notificationEnabled = true,
-        onNotificationToggled = { },
-        onFinish = {
+    /*NotificationPage(notificationEnabled = true,
+            onNotificationToggled = { },
+            onFinish = {
 
-        })*//*
+            })*//*
 
 
     var currentSelectedTopics by remember { mutableStateOf(emptyList<String>()) }

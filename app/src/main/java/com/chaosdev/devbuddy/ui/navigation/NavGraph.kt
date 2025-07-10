@@ -1,30 +1,21 @@
 package com.chaosdev.devbuddy.ui.navigation
 
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.chaosdev.devbuddy.ui.auth.login.LoginScreen
 import com.chaosdev.devbuddy.ui.auth.signup.SignUpScreen
 import com.chaosdev.devbuddy.ui.auth.signup.SignUpViewModel
 import com.chaosdev.devbuddy.ui.home.HomeScreen
+import com.chaosdev.devbuddy.ui.login.LoginViewModel
 import com.chaosdev.devbuddy.ui.onboarding.OnboardingScreen
 import com.chaosdev.devbuddy.ui.profile.ProfileScreen
 import com.chaosdev.devbuddy.ui.settings.SettingsScreen
 import com.chaosdev.devbuddy.ui.splash.SplashViewModel
-import com.chaosdev.devbuddy.ui.login.LoginViewModel
-import com.chaosdev.devbuddy.R
 
 @Composable
 fun AppNavGraph(
@@ -92,6 +83,7 @@ fun AppNavGraph(
                     launchSingleTop = true
                 }
             }
+
             loginNavigationState is LoginViewModel.NavigationState.Home -> {
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
@@ -99,9 +91,11 @@ fun AppNavGraph(
                     launchSingleTop = true
                 }
             }
+
             loginNavigationState is LoginViewModel.NavigationState.GoogleSignIn -> {
                 // Handled in LoginScreen
             }
+
             else -> Unit
         }
     }
