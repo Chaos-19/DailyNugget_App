@@ -5,25 +5,32 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,11 +42,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.chaosdev.devbuddy.R
 import com.chaosdev.devbuddy.ui.common.Resource
 import com.chaosdev.devbuddy.ui.login.LoginViewModel
 import com.chaosdev.devbuddy.ui.navigation.Screen
@@ -128,82 +137,97 @@ fun LoginScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = "Login", style = MaterialTheme.typography.headlineLarge)
-        Spacer(modifier = Modifier.height(32.dp))
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = { viewModel.loginWithEmail(email, password) },
-            enabled = uiState !is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>,
-            modifier = Modifier.fillMaxWidth()
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(text = "Welcome Back")
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (uiState is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
-            } else {
-                Text("Login with Email")
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password",) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+
+            )
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Button(
+                contentPadding = PaddingValues(vertical = 14.dp),
+                onClick = { viewModel.loginWithEmail(email, password) },
+                enabled = uiState !is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                if (uiState is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Login with Email",style = MaterialTheme.typography.titleMedium)
+                }
             }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-        Button(
-            onClick = { navController.navigate(Screen.SignUp.route) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-        ) {
-            Text("Don't have an account? Sign Up")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
 
-        Divider(
-            modifier = Modifier.fillMaxWidth(),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline
-        )
-        Text("OR", modifier = Modifier.padding(vertical = 8.dp))
-        Divider(
-            modifier = Modifier.fillMaxWidth(),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+            Text("OR", modifier = Modifier.padding(vertical = 8.dp))
 
-        Button(
-            onClick = { viewModel.beginGoogleSignIn() },
-            enabled = uiState !is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-        ) {
-            if (googleSignInFlow is Resource.Loading<BeginSignInResult>) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.onSecondary)
-            } else {
-                Text("Sign in with Google")
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                contentPadding = PaddingValues(vertical = 14.dp),
+                onClick = { viewModel.beginGoogleSignIn() },
+                enabled = uiState !is LoginViewModel.UiState.Loading && googleSignInFlow !is Resource.Loading<BeginSignInResult>,
+                modifier = Modifier.fillMaxWidth(),
+
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                if (googleSignInFlow is Resource.Loading<BeginSignInResult>) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onSecondary)
+                } else {
+                    Row (verticalAlignment = Alignment.CenterVertically , horizontalArrangement = Arrangement.Center){
+                        Icon(painter = painterResource(R.drawable.ic_google_logo), contentDescription = "")
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text("Sign in with Google", style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(
+                onClick = { navController.navigate(Screen.SignUp.route) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Text("Don't have an account? Sign Up")
             }
         }
     }
