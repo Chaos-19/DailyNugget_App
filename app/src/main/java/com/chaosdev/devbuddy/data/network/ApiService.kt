@@ -1,66 +1,32 @@
 package com.chaosdev.devbuddy.data.network
 
+import android.content.Context
 import com.chaosdev.devbuddy.data.model.Challenge
 import com.chaosdev.devbuddy.data.model.FeedItem
 import com.chaosdev.devbuddy.data.model.Progress
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Cache
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
-import java.io.IOException
-import javax.inject.Inject
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import java.io.File
 import javax.inject.Singleton
 
-class ApiService @Inject constructor(private val client: OkHttpClient) {
-    private val gson = Gson()
-    private val baseUrl = "https://api.dailynuggetapp.com"
+interface ApiService {
+    @GET("api/feed")
+    suspend fun getFeed(): List<FeedItem>
 
-    suspend fun getFeed(): List<FeedItem> {
-        val request = Request.Builder()
-            .url("$baseUrl/api/feed")
-            .build()
-        return try {
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
-            val json = response.body?.string() ?: throw IOException("Empty response")
-            gson.fromJson(json, object : TypeToken<List<FeedItem>>() {}.type)
-        } catch (e: Exception) {
-            throw IOException("Failed to fetch feed: ${e.message}")
-        }
-    }
+    @GET("api/progress")
+    suspend fun getProgress(): Progress
 
-    suspend fun getProgress(): Progress {
-        val request = Request.Builder()
-            .url("$baseUrl/api/progress")
-            .build()
-        return try {
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
-            val json = response.body?.string() ?: throw IOException("Empty response")
-            gson.fromJson(json, Progress::class.java)
-        } catch (e: Exception) {
-            throw IOException("Failed to fetch progress: ${e.message}")
-        }
-    }
-
-    suspend fun getChallenges(): List<Challenge> {
-        val request = Request.Builder()
-            .url("$baseUrl/api/challenges")
-            .build()
-        return try {
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
-            val json = response.body?.string() ?: throw IOException("Empty response")
-            gson.fromJson(json, object : TypeToken<List<Challenge>>() {}.type)
-        } catch (e: Exception) {
-            throw IOException("Failed to fetch challenges: ${e.message}")
-        }
-    }
+    @GET("api/challenges")
+    suspend fun getChallenges(): List<Challenge>
 }
 
 @Module
@@ -68,11 +34,14 @@ class ApiService @Inject constructor(private val client: OkHttpClient) {
 object NetworkModule {
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+        val cacheSize = 10 * 1024 * 1024 // 10 MB
+        val cache = Cache(File(context.cacheDir, "http-cache"), cacheSize.toLong())
         val logging = HttpLoggingInterceptor().apply {
             setLevel(HttpLoggingInterceptor.Level.BODY)
         }
         return OkHttpClient.Builder()
+            .cache(cache)
             .addInterceptor(logging)
             .build()
     }
@@ -80,6 +49,11 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideApiService(client: OkHttpClient): ApiService {
-        return ApiService(client)
+        return Retrofit.Builder()
+            .baseUrl("https://api.dailynuggetapp.com/")
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
     }
 }
