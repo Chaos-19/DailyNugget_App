@@ -18,6 +18,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Cache
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import java.io.File
 import javax.inject.Singleton
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "onboarding")
@@ -46,5 +50,17 @@ object AppModule {
     @Singleton
     fun provideOnboardingPreferences(@ApplicationContext context: Context): OnboardingPreferences {
         return OnboardingPreferences(context.dataStore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+        val cacheSize = 10 * 1024 * 1024 // 10 MB
+        val cache = Cache(File(context.cacheDir, "http-cache"), cacheSize.toLong())
+        val logging = HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) }
+        return OkHttpClient.Builder()
+            .cache(cache)
+            .addInterceptor(logging)
+            .build()
     }
 }

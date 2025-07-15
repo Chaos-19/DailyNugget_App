@@ -2,25 +2,12 @@
 plugins {
     id("com.android.application") version "8.4.0" apply false
     id("com.android.library") version "8.4.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.7.20" apply false
+    id("org.jetbrains.kotlin.android") version "1.9.0" apply false
     id("com.google.gms.google-services") version "4.4.2" apply false
-    id("com.google.dagger.hilt.android") version "2.44.2" apply false
+    id("com.google.dagger.hilt.android") version "2.51.1" apply false
     
 }
 
 tasks.register<Delete>("clean") {
     delete(rootProject.buildDir)
 }
-/*
-plugins {
-    id("com.android.application") version "8.11.0" apply false
-    id("com.android.library") version "8.11.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.7.20" apply false   
-    id("com.google.gms.google-services") version "4.4.2" apply false     
-    id("com.google.dagger.hilt.android") version "2.44.2" apply false // Add Hilt plugin
-}
-
-tasks.register<Delete>("clean") {
-    delete(rootProject.buildDir)
-}
-*/

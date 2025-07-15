@@ -40,17 +40,17 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.3.2"
+        kotlinCompilerExtensionVersion = "1.5.1"
     }
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-}
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }
 
 dependencies {
@@ -82,8 +82,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     
     // --- Hilt (Dependency Injection) ---
-    implementation("com.google.dagger:hilt-android:2.44.2")
-    kapt("com.google.dagger:hilt-android-compiler:2.44.2")
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0") {
         exclude(group = "com.google.dagger", module = "hilt-android")
         exclude(group = "com.google.dagger", module = "hilt-core")
@@ -105,6 +105,10 @@ dependencies {
     
     // Use foundation version compatible with Compose 1.7.*
     implementation("androidx.compose.foundation:foundation:1.5.4")
+
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.google.code.gson:gson:2.10.1")
 }
 
 kapt { correctErrorTypes=true } 
