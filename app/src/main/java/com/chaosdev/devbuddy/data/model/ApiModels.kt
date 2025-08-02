@@ -2,6 +2,20 @@ package com.chaosdev.devbuddy.data.model
 
 import com.google.gson.annotations.SerializedName
 
+
+data class User(
+    @SerializedName("username") val username: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("selected_topics") val selectedTopics: List<String> = emptyList(),
+    @SerializedName("read_time") val readTime: Int = 0
+)
+
+data class UserResponse(
+    @SerializedName("user") val user: User ,
+    @SerializedName("apiKey") val token: String
+)
+
 data class FeedItem(
     @SerializedName("id") val id: String,
     @SerializedName("title") val title: String,
@@ -18,3 +32,4 @@ data class Challenge(
     @SerializedName("name") val name: String,
     @SerializedName("difficulty") val difficulty: String
 )
+

@@ -4,6 +4,8 @@ import android.content.Context
 import com.chaosdev.devbuddy.data.model.Challenge
 import com.chaosdev.devbuddy.data.model.FeedItem
 import com.chaosdev.devbuddy.data.model.Progress
+import com.chaosdev.devbuddy.data.model.User
+import com.chaosdev.devbuddy.data.model.UserResponse
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,11 +16,16 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import java.io.File
 import javax.inject.Singleton
 
 interface ApiService {
+    @POST("api/register")
+    suspend fun registerUser(@Body user: User): UserResponse
+
     @GET("api/feed")
     suspend fun getFeed(): List<FeedItem>
 

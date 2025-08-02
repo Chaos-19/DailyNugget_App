@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,30 +28,39 @@ fun CardComponent(
     title: String = "Build A Full-Stack app with next 13.54",
     time: String = "40 min"
 ) {
-    Column(
-        modifier = Modifier
 
-            .background(color = Color(34, 56, 40))
+    Card(colors = CardDefaults.cardColors(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+    ),
+        modifier = Modifier
+            .size(width = 300.dp, height = 230.dp)
+
     ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)) {
-            Image(
-                painter = painterResource(id = R.drawable.welcome),
-                contentDescription = "Welcome Image",
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-            )
-            Text(
-                text = time,
-                style = MaterialTheme.typography.titleSmall,
-                textAlign = TextAlign.Center
-            )
+        Column(
+            modifier = Modifier
+                .background(color = Color(34, 56, 40))
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)) {
+                Image(
+                    painter = painterResource(id = R.drawable.welcome),
+                    contentDescription = "Welcome Image",
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    //textAlign = TextAlign.Center,
+                    modifier = Modifier
+                )
+                Spacer(modifier = Modifier.height(5.dp))
+                Text(
+                    text = time,
+                    style = MaterialTheme.typography.titleSmall,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
