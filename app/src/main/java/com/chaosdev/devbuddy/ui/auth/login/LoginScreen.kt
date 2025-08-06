@@ -119,23 +119,25 @@ fun LoginScreen(
     LaunchedEffect(uiState) {
         when (uiState) {
             is LoginViewModel.UiState.Error -> {
-                val currentUiState = uiState
-                if (currentUiState is LoginViewModel.UiState.Error) {
-                    Toast.makeText(context, currentUiState.message, Toast.LENGTH_LONG).show()
-                    viewModel.resetUiState()
+                val currentUiState = uiState as LoginViewModel.UiState.Error
+                val message = if (currentUiState.message.contains("API")) {
+                    "Failed to register with server: ${currentUiState.message}"
+                } else {
+                    "Authentication failed: ${currentUiState.message}"
                 }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                 viewModel.resetUiState()
             }
-
             is LoginViewModel.UiState.Loading -> {
                 // Show loading indicator
             }
-
             is LoginViewModel.UiState.Idle -> {
                 // Initial state
             }
         }
     }
+
+
 
     Scaffold(
         topBar = {
