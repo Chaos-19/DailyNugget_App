@@ -4,6 +4,6 @@
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
         <!-- Add your local machine's IP if testing on a physical device -->
-        <!-- <domain includeSubdomains="true">192.168.x.x</domain> -->
+        <domain includeSubdomains="true">192.168.x.x</domain>
     </domain-config>
 </network-security-config>
