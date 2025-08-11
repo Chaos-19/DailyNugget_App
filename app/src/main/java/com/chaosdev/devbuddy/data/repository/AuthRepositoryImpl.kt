@@ -44,11 +44,14 @@ class AuthRepositoryImpl @Inject constructor(
     ): Result<FirebaseUser> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
+            Log.d("PASSWORD_VALUE",password)
             result.user?.let { user ->
                 // Register user with your API after successful Firebase registration
                 val apiResult = registerUserWithApi(User(
                     username = user.displayName  ,
-                    email =user.email, password = password, selectedTopics = emptyList(), readTime = 0, id = null))
+                    email =user.email, password=password , selectedTopics = emptyList(), readTime = 0, id = null))
+                Log.d("USER_DATA",user.toString())
+                Log.d("PASSWORD_VALUE_2",password)
                 if (apiResult.isSuccess) {
                     Result.success(user)
                 } else {
@@ -103,7 +106,8 @@ class AuthRepositoryImpl @Inject constructor(
             val authResult = auth.signInWithCredential(firebaseCredential).await()
             authResult.user?.let { user ->
                 // Register user with your API after successful Google sign-in
-                val apiResult = registerUserWithApi(User(username = user.displayName, email = user.email, password = user.providerId, selectedTopics = emptyList(), readTime = 0, id = null))
+                val apiResult = registerUserWithApi(User(username = user.displayName, email = user.email, password = user.providerId?: user.uid, selectedTopics = emptyList(), readTime = 0, id = null))
+                Log.d("userObj",user.toString())
                 if (apiResult.isSuccess) {
 
                     Result.success(user)
@@ -144,7 +148,7 @@ class AuthRepositoryImpl @Inject constructor(
             val userData = User(
                 username = user.username ?: "Unknown",
                 email = user.email ?: "",
-                password = "", // Password is not needed for Google sign-in
+                password = user.password,
                 selectedTopics = emptyList(),
                 readTime = 0,
                 id = null

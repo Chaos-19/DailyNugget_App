@@ -25,10 +25,20 @@ data class UserResponse(
     @SerializedName("apiKey") val apiKey: ApiKey
 )
 
-data class updatePreferencesRespons(
-    @SerializedName("message") val message: String,
-    @SerializedName("error") val error: String? = null
+data class UpdatePreferencesRequest(
+    @SerializedName("topicsOfInterset") val selectedTopics: List<String>,
+    @SerializedName("readTime") val readTime: Int,
+    @SerializedName("apiKey") val apiKey: String
 )
+
+data class UpdatePreferencesRespons(
+    @SerializedName("message") val message: String,
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("error") val error: String? = null
+    
+)
+
+
 
 
 data class FeedItem(

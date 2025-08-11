@@ -4,9 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
-import com.chaosdev.devbuddy.data.model.User
-import com.chaosdev.devbuddy.data.model.UserResponse
-import com.chaosdev.devbuddy.data.model.updatePreferencesRespons
+import com.chaosdev.devbuddy.data.model.UpdatePreferencesRequest
+import com.chaosdev.devbuddy.data.model.UpdatePreferencesRespons
 import com.chaosdev.devbuddy.data.network.ApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +43,12 @@ class OnboardingViewModel @Inject constructor(
 
     fun saveOnboardingData() {
         viewModelScope.launch {
-            val apiResult = updatePreferencesWithApi(_selectedTopics.value)
+            val apiResult = updatePreferencesWithApi(UpdatePreferencesRequest(
+                apiKey = onboardingPreferences.getApiKey().toString(),
+                selectedTopics = _selectedTopics.value,
+                readTime = _selectedTime.value
+            ))
+
             if (apiResult.isSuccess) {
                 onboardingPreferences.setHasSeenOnboarding(true)
                 onboardingPreferences.setSelectedTopics(_selectedTopics.value)
@@ -56,9 +60,9 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    private suspend fun updatePreferencesWithApi(selectedTopics: List<String>): Result<updatePreferencesRespons> {
+    private suspend fun updatePreferencesWithApi(userPreferences: UpdatePreferencesRequest): Result<UpdatePreferencesRespons> {
         return try {
-            val response = apiService.updatePreferencesWithApi(selectedTopics)
+            val response = apiService.updatePreferencesWithApi(userPreferences)
             Result.success(response)
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error registering user with API: ${e.message}", e)

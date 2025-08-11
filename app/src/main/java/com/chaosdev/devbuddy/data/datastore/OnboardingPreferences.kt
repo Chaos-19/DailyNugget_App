@@ -1,5 +1,6 @@
 package com.chaosdev.devbuddy.data.datastore
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -109,5 +110,12 @@ class OnboardingPreferences @Inject constructor(
         return dataStore.data.map { preferences ->
             preferences[USER_ID]
         }.first()
+    }
+
+    suspend fun clearDataStore() {
+        dataStore.edit { preferences ->
+            preferences.clear()
+            Log.d("OnboardingPreferences", "DataStore cleared")
+        }
     }
 }
