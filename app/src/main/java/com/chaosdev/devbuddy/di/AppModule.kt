@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
+import com.chaosdev.devbuddy.data.network.ApiService
 import com.chaosdev.devbuddy.data.repository.AuthRepository
 import com.chaosdev.devbuddy.data.repository.AuthRepositoryImpl
 import com.google.android.gms.auth.api.identity.Identity
@@ -43,8 +44,15 @@ object AppModule {
     @Singleton
     fun provideAuthRepository(
         auth: FirebaseAuth,
-        oneTapClient: SignInClient
-    ): AuthRepository = AuthRepositoryImpl(auth, oneTapClient)
+        oneTapClient: SignInClient,
+        apiService: ApiService,
+        onboardingPreferences: OnboardingPreferences
+    ): AuthRepository =  AuthRepositoryImpl(
+            auth,
+            oneTapClient,
+            apiService,
+            onboardingPreferences)
+
 
     @Provides
     @Singleton
@@ -52,15 +60,15 @@ object AppModule {
         return OnboardingPreferences(context.dataStore)
     }
 
-    @Provides
-    @Singleton
-    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
-        val cacheSize = 10 * 1024 * 1024 // 10 MB
-        val cache = Cache(File(context.cacheDir, "http-cache"), cacheSize.toLong())
-        val logging = HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) }
-        return OkHttpClient.Builder()
-            .cache(cache)
-            .addInterceptor(logging)
-            .build()
-    }
+//    @Provides
+//    @Singleton
+//    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+//        val cacheSize = 10 * 1024 * 1024 // 10 MB
+//        val cache = Cache(File(context.cacheDir, "http-cache"), cacheSize.toLong())
+//        val logging = HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) }
+//        return OkHttpClient.Builder()
+//            .cache(cache)
+//            .addInterceptor(logging)
+//            .build()
+//    }
 }

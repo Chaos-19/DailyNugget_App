@@ -137,7 +137,7 @@ fun OnboardingScreen(
                         notificationEnabled = notificationEnabled,
                         onNotificationToggled = { enabled -> viewModel.toggleNotification(enabled) },
                         onFinish = {
-                            //viewModel.saveOnboardingData()
+                            viewModel.saveOnboardingData()
                             navController.navigate(Screen.Home.route) {
                                 popUpTo(Screen.Onboarding.route) { inclusive = true }
                                 popUpTo(Screen.Login.route) { inclusive = true }

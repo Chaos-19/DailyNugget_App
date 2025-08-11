@@ -12,19 +12,33 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
+import com.chaosdev.devbuddy.data.datastore.OnboardingPreferences
 import com.chaosdev.devbuddy.ui.navigation.AppNavGraph
 import com.chaosdev.devbuddy.ui.splash.SplashViewModel
 import com.chaosdev.devbuddy.ui.theme.MyComposeApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val splashViewModel: SplashViewModel by viewModels()
 
+    @Inject lateinit var onboardingPreferences: OnboardingPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashscreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // Clear DataStore in debug mode only (remove after testing)
+
+        runBlocking {
+            onboardingPreferences.clearDataStore()
+        }
+
+
 
         splashscreen.setKeepOnScreenCondition { splashViewModel.isLoading.value }
 

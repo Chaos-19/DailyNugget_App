@@ -67,6 +67,9 @@ fun SignUpScreen(
             }
 
             null -> Unit
+            else -> {
+                // Handle other navigation states if needed
+            }
         }
     }
 

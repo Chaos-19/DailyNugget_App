@@ -1,9 +1,16 @@
 package com.chaosdev.devbuddy.data.network
 
 import android.content.Context
+import androidx.multidex.BuildConfig
 import com.chaosdev.devbuddy.data.model.Challenge
 import com.chaosdev.devbuddy.data.model.FeedItem
 import com.chaosdev.devbuddy.data.model.Progress
+import com.chaosdev.devbuddy.data.model.UpdatePreferencesRequest
+import com.chaosdev.devbuddy.data.model.UpdatePreferencesRespons
+import com.chaosdev.devbuddy.data.model.User
+import com.chaosdev.devbuddy.data.model.UserResponse
+import com.chaosdev.devbuddy.ui.common.Resource
+import com.chaosdev.devbuddy.ui.common.Response
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,11 +21,19 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import java.io.File
 import javax.inject.Singleton
 
 interface ApiService {
+    @POST("api/user/register")
+    suspend fun registerUser(@Body user: User): UserResponse
+
+    @POST("api/user/updatePreferences")
+    suspend fun updatePreferencesWithApi(@Body userPreferences: UpdatePreferencesRequest): UpdatePreferencesRespons
+
     @GET("api/feed")
     suspend fun getFeed(): List<FeedItem>
 
@@ -49,8 +64,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideApiService(client: OkHttpClient): ApiService {
+        val baseUrl = "http://10.0.2.2:3000/"
         return Retrofit.Builder()
-            .baseUrl("https://api.dailynuggetapp.com/")
+            .baseUrl(baseUrl)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
